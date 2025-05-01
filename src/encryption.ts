@@ -27,14 +27,18 @@ export async function encryptFile(
 	sourceFilePath: string,
 	destinationFilePath: string
 ) {
-	const inputStream = fs.createReadStream(sourceFilePath, { highWaterMark: chunkSize });
+	const sourceFile = fs.openSync(sourceFilePath, 'r');
+	const buffer = Buffer.alloc(chunkSize);
 	const noise = crypto.randomBytes(16);
 	const outputStream = fs.createWriteStream(destinationFilePath);
 	outputStream.write(noise);
-	for await (const chunk of inputStream) {
-		const bytes = bufferToArray(Buffer.from(chunk));
+	while (true) {
+		const byteCount = fs.readSync(sourceFile, buffer, 0, chunkSize, null);
+		if (!byteCount) break;
+		const bytes = bufferToArray(buffer.subarray(0, byteCount));
 		const encryptedBytes = encrypt(password, noise, bytes);
 		outputStream.write(encryptedBytes);
 	}
+	fs.closeSync(sourceFile);
 	outputStream.close();
 }
