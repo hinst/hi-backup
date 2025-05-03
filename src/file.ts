@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { bufferToArray, INT32_SIZE, int32ToBuffer } from './array';
 
-export const CHUNK_SIZE = 4 * 1024 * 1024;
+export const CHUNK_SIZE = 1024 * 1024;
 
 export function writePreSizedChunk(outputStream: fs.WriteStream, data: Uint8Array) {
 	outputStream.write(int32ToBuffer(data.length));
