@@ -1,4 +1,4 @@
-import fs, { read } from 'fs';
+import fs from 'fs';
 import { INT32_SIZE, int32ToBuffer } from './array';
 
 export const CHUNK_SIZE = 1024 * 1024;
