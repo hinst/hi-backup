@@ -1,8 +1,10 @@
 import fs from 'fs';
 import path from 'path';
 import { Encryption } from './encryption';
+import { readBufferFromFile } from './file';
 
 const MAX_FILE_NAME_LENGTH = 32;
+const INFO_FILE_EXTENSION = '.info';
 
 export class FolderEncryption {
 	private readonly encryption: Encryption = new Encryption(this.password);
@@ -27,9 +29,24 @@ export class FolderEncryption {
 		this.unpackFolder(this.sourcePath, this.destinationPath);
 	}
 
-	private unpackFolder(sourcePath: string, destinationPath: string) {
-		const sourceFiles = fs.readdirSync(sourcePath);
-		fs.mkdirSync(destinationPath, { recursive: true });
+	private unpackFolder(sourceFolderPath: string, destinationFolderPath: string) {
+		const sourceFiles = fs.readdirSync(sourceFolderPath);
+		fs.mkdirSync(destinationFolderPath, { recursive: true });
+		for (const fileName of sourceFiles) {
+			if (fileName.endsWith(INFO_FILE_EXTENSION)) continue;
+			const sourcePath = path.join(sourceFolderPath, fileName);
+			const fileInfo = fs.statSync(sourcePath);
+			if (fileInfo.isFile()) {
+				console.log(sourcePath);
+				this.encryption.decryptFile(sourcePath, destinationFolderPath);
+				this.stats.sourceFiles++;
+			}
+			if (fileInfo.isDirectory()) {
+				const realFileName = this.loadFolderName(sourcePath + INFO_FILE_EXTENSION);
+				const destinationFilePath = path.join(destinationFolderPath, realFileName);
+				this.unpackFolder(sourcePath, destinationFilePath);
+			}
+		}
 	}
 
 	private createShortEncryptedName(fileName: string): string {
@@ -75,7 +92,7 @@ export class FolderEncryption {
 				this._stats.sourceFiles++;
 			}
 			if (fileInfo.isDirectory()) {
-				this.saveFolderName(destinationFilePath, fileName);
+				this.saveFolderName(destinationFilePath + INFO_FILE_EXTENSION, fileName);
 				this.syncFolder(sourceFilePath, destinationFilePath);
 				this._stats.sourceFolders++;
 			}
@@ -85,15 +102,24 @@ export class FolderEncryption {
 	private saveFolderName(destinationFilePath: string, fileName: string) {
 		const noise = Encryption.createNoise();
 		fs.writeFileSync(
-			destinationFilePath + '.info',
+			destinationFilePath,
 			Buffer.concat([noise, this.encryption.encrypt(noise, Buffer.from(fileName))])
 		);
+	}
+
+	private loadFolderName(destinationFilePath: string): string {
+		const file = fs.openSync(destinationFilePath, 'r');
+		const noise = Encryption.readNoise(file);
+		const buffer = readBufferFromFile(file);
+		const fileName = this.encryption.decryptText(noise, buffer);
+		fs.closeSync(file);
+		return fileName;
 	}
 
 	private syncFolderBackward(encryptedFileNames: Set<string>, destinationPath: string) {
 		const destinationFiles = fs.readdirSync(destinationPath);
 		for (const fileName of destinationFiles) {
-			if (fileName.endsWith('.info')) continue;
+			if (fileName.endsWith(INFO_FILE_EXTENSION)) continue;
 			if (!encryptedFileNames.has(fileName)) {
 				const destinationFilePath = path.join(destinationPath, fileName);
 				const fileInfo = fs.statSync(destinationFilePath);

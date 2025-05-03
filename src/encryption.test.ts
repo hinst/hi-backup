@@ -3,7 +3,6 @@ import assert from 'assert';
 import fs from 'fs';
 import { Encryption } from './encryption';
 import { changeRandomByte, FileFormatError } from './file';
-import { FolderEncryption } from './folderEncryption';
 
 test(Encryption.prototype.encrypt.name, function () {
 	const password = 'foo';

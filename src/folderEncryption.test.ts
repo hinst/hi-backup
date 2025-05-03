@@ -5,7 +5,7 @@ import { FolderEncryption, FolderEncryptionStats } from './folderEncryption';
 
 test(FolderEncryption.prototype.sync.name, function () {
 	if (fs.existsSync('./test.1')) fs.rmdirSync('./test.1', { recursive: true });
-	const folderEncryption = new FolderEncryption('password', './test', './test.1');
+	let folderEncryption = new FolderEncryption('password', './test', './test.1');
 
 	folderEncryption.sync();
 	const expectedStats = Object.assign(new FolderEncryptionStats(), {
@@ -21,6 +21,9 @@ test(FolderEncryption.prototype.sync.name, function () {
 	expectedStats.newFiles = 0;
 	folderEncryption.sync();
 	assert.deepEqual(folderEncryption.stats, expectedStats);
+
+	folderEncryption = new FolderEncryption('password', './test.1', './test.0');
+	folderEncryption.unpack();
 
 	fs.rmdirSync('./test.1', { recursive: true });
 });
