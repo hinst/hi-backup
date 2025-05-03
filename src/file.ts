@@ -46,10 +46,15 @@ export function readPreSizedChunk(file: number): Buffer {
 
 export function changeRandomByte(filePath: string) {
 	const file = fs.openSync(filePath, 'r+');
-	const buffer = Buffer.alloc(1);
-	const randomByte = Math.floor(Math.random() * 256);
-	buffer.writeUInt8(randomByte, 0);
 	const offset = Math.floor(Math.random() * fs.statSync(filePath).size);
+	const buffer = Buffer.alloc(1);
+	fs.readSync(file, buffer, 0, 1, offset);
+	const originalByte = buffer.readUInt8(0);
+	let randomByte = Math.floor(Math.random() * 256);
+	while (randomByte === originalByte) {
+		randomByte = Math.floor(Math.random() * 256);
+	}
+	buffer.writeUInt8(randomByte, 0);
 	fs.writeSync(file, buffer, 0, 1, offset);
 	fs.closeSync(file);
 }
