@@ -18,15 +18,17 @@ export class Encryption {
 
 	encrypt(noise: Uint8Array, data: Uint8Array) {
 		const cipher = crypto.createCipheriv(ENCRYPTION_ALGORITHM, this.key, noise);
-		cipher.update(data);
-		const output = cipher.final();
+		const buffer1 = cipher.update(data);
+		const buffer2 = cipher.final();
+		const output = Buffer.concat([buffer1, buffer2]);
 		return bufferToArray(output);
 	}
 
 	decrypt(noise: Uint8Array, data: Uint8Array) {
 		const decipher = crypto.createDecipheriv(ENCRYPTION_ALGORITHM, this.key, noise);
-		decipher.update(data);
-		const output = decipher.final();
+		const buffer1 = decipher.update(data);
+		const buffer2 = decipher.final();
+		const output = Buffer.concat([buffer1, buffer2]);
 		return bufferToArray(output);
 	}
 
@@ -92,6 +94,6 @@ export class Encryption {
 		}
 		fs.closeSync(sourceFile);
 		fs.closeSync(destinationFile);
-		return !isConsistent;
+		return isConsistent;
 	}
 }

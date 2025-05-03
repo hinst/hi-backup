@@ -17,8 +17,16 @@ test(Encryption.prototype.encrypt.name, function () {
 
 test(Encryption.prototype.encryptFile.name, function () {
 	const password = 'file';
-	const noise = Encryption.createNoise();
 	const filePath = 'test/SamplePNGImage_3mb.png';
-	const encryptedFilePath = 'test/SamplePNGImage_3mb.png.enc';
+	const otherFilePath = 'test/text.txt';
+	const encryptedFilePath = 'test/SamplePNGImage_3mb.1';
 	new Encryption(password).encryptFile(filePath, encryptedFilePath);
+	assert.equal(
+		new Encryption(password).compareFileWithEncrypted(filePath, encryptedFilePath),
+		true
+	);
+	assert.equal(
+		new Encryption(password).compareFileWithEncrypted(otherFilePath, encryptedFilePath),
+		false
+	);
 });
