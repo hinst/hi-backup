@@ -127,12 +127,3 @@ export class Encryption {
 		return new TextDecoder().decode(decrypted);
 	}
 }
-
-export class FolderSyncSummary {
-	constructor(
-		public readonly totalFiles: number,
-		public readonly newFiles: number,
-		public readonly updatedFiles: number,
-		public readonly deletedFiles: number
-	) {}
-}
