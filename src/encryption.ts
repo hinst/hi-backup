@@ -60,16 +60,22 @@ export class Encryption {
 		fs.closeSync(outputFile);
 	}
 
+	private static readNoise(file: number): Buffer {
+		const buffer = Buffer.alloc(NOISE_SIZE);
+		const bytesRead = fs.readSync(file, buffer, 0, NOISE_SIZE, null);
+		if (bytesRead !== NOISE_SIZE) {
+			throw new FileFormatError(
+				'File format error: expected ' + NOISE_SIZE + ' bytes for noise'
+			);
+		}
+		return buffer.subarray(0, NOISE_SIZE);
+	}
+
 	compareFileWithEncrypted(sourceFilePath: string, destinationFilePath: string): boolean {
 		const sourceFile = fs.openSync(sourceFilePath, 'r');
 		const destinationFile = fs.openSync(destinationFilePath, 'r');
 		const sourceBuffer = Buffer.alloc(CHUNK_SIZE);
-		const destinationBuffer = Buffer.alloc(CHUNK_SIZE);
-		const noiseSize = fs.readSync(destinationFile, destinationBuffer, 0, NOISE_SIZE, null);
-		if (noiseSize !== NOISE_SIZE) {
-			throw new FileFormatError('Wrong noise from encrypted file');
-		}
-		const noise = destinationBuffer.subarray(0, NOISE_SIZE);
+		const noise = Encryption.readNoise(destinationFile);
 		let isConsistent = true;
 		while (isConsistent) {
 			const sourceSize = fs.readSync(sourceFile, sourceBuffer, 0, CHUNK_SIZE, null);
