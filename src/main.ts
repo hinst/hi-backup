@@ -11,10 +11,12 @@ function requireEnvironmentString(key: string): string {
 const sourceFolder = requireEnvironmentString('source');
 const destinationFolder = requireEnvironmentString('destination');
 const password = requireEnvironmentString('password');
+const unpack = process.env['unpack'] === 'true';
 
-console.log(`Encrypting ${sourceFolder} to ${destinationFolder}`);
+console.log((unpack ? 'Unpacking ' : 'Encrypting ') + sourceFolder + ' -> ' + destinationFolder);
 const folderEncryption = new FolderEncryption(password, sourceFolder, destinationFolder);
 console.time('\tdone');
-folderEncryption.sync();
+if (unpack) folderEncryption.unpack();
+else folderEncryption.sync();
 console.timeEnd('\tdone');
 console.log(folderEncryption.stats);
