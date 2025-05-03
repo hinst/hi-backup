@@ -89,7 +89,7 @@ export class Encryption {
 		const destinationFile = fs.openSync(destinationFilePath, 'r');
 		const sourceBuffer = Buffer.alloc(CHUNK_SIZE);
 		const noise = Encryption.readNoise(destinationFile);
-		readBufferFromFile(destinationFile);
+		this.decrypt(noise, readBufferFromFile(destinationFile));
 		let isConsistent = true;
 		while (isConsistent) {
 			const sourceSize = fs.readSync(sourceFile, sourceBuffer, 0, CHUNK_SIZE, null);
@@ -142,6 +142,5 @@ export class Encryption {
 				throw new Error('Encrypted file name collision: ' + shortEncryptedName);
 			encryptedFileNames.add(shortEncryptedName);
 		}
-		console.log(encryptedFileNames);
 	}
 }
