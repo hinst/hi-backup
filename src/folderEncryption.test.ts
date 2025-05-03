@@ -5,8 +5,8 @@ import { compareSync } from 'dir-compare';
 import { FolderEncryption, FolderEncryptionStats } from './folderEncryption';
 
 test(FolderEncryption.prototype.sync.name, function () {
-	if (fs.existsSync('./test.1')) fs.rmdirSync('./test.1', { recursive: true });
-	if (fs.existsSync('./test.0')) fs.rmdirSync('./test.0', { recursive: true });
+	if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
+	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
 
 	let folderEncryption = new FolderEncryption('password', './test', './test.1');
 	folderEncryption.sync();
@@ -32,6 +32,6 @@ test(FolderEncryption.prototype.sync.name, function () {
 	assert.equal(comparison.same, true);
 	assert.equal(comparison.total, 4);
 
-	fs.rmdirSync('./test.1', { recursive: true });
-	fs.rmdirSync('./test.0', { recursive: true });
+	fs.rmSync('./test.1', { recursive: true });
+	fs.rmSync('./test.0', { recursive: true });
 });

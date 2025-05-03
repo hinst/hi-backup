@@ -130,16 +130,23 @@ export class FolderEncryption {
 			if (!encryptedFileNames.has(fileName)) {
 				const destinationFilePath = path.join(destinationPath, fileName);
 				const fileInfo = fs.statSync(destinationFilePath);
-				console.log('-d ' + destinationFilePath);
 				if (fileInfo.isFile()) {
+					console.log('-f ' + destinationFilePath);
 					fs.unlinkSync(destinationFilePath);
 					this._stats.deletedFiles++;
 				} else if (fileInfo.isDirectory()) {
-					fs.rmSync(destinationFilePath, { recursive: true });
+					console.log('-d ' + destinationFilePath);
+					this.deleteEncryptedFolder(destinationFilePath);
 					this._stats.deletedFolders++;
 				}
 			}
 		}
+	}
+
+	private deleteEncryptedFolder(path: string) {
+		fs.rmSync(path, { recursive: true });
+		const infoPath = path + INFO_FILE_EXTENSION;
+		if (fs.existsSync(infoPath)) fs.unlinkSync(infoPath);
 	}
 
 	private syncFile(sourcePath: string, destinationPath: string) {
@@ -147,7 +154,7 @@ export class FolderEncryption {
 		let isDamaged = false;
 		if (fs.existsSync(destinationPath) && fs.statSync(destinationPath).isDirectory()) {
 			console.log('-d ' + destinationPath);
-			fs.rmSync(destinationPath, { recursive: true });
+			this.deleteEncryptedFolder(destinationPath);
 			this._stats.deletedFolders++;
 		}
 		if (fs.existsSync(destinationPath)) {
