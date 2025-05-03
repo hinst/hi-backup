@@ -1,10 +1,14 @@
-import { Encryption } from './encryption';
+import 'source-map-support/register';
+import process from 'process';
+import { FolderEncryption } from './folderEncryption';
 
-function main() {
-	new Encryption('password').encryptFile(
-		'C:\\Dev\\hi-backup\\.prettierrc',
-		'C:\\Dev\\hi-backup\\test\\.prettierrc'
-	);
+function requireEnvironmentString(key: string): string {
+	const text = process.env[key];
+	if (!text?.length) throw new Error('Required string is missing');
+	return text;
 }
 
-main();
+const sourceFolder = requireEnvironmentString('source');
+const destinationFolder = requireEnvironmentString('destination');
+const password = requireEnvironmentString('password');
+new FolderEncryption(password, sourceFolder, destinationFolder).sync();

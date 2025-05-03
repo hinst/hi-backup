@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { Encryption } from './encryption';
-import { readBufferFromFile, writeBufferToFile } from './file';
+import { FileFormatError, readBufferFromFile, writeBufferToFile } from './file';
 
 const MAX_FILE_NAME_LENGTH = 32;
 const INFO_FILE_EXTENSION = '.info';
@@ -67,6 +67,15 @@ export class FolderEncryption {
 	}
 
 	private syncFolder(sourcePath: string, destinationPath: string) {
+		if (fs.existsSync(destinationPath) && fs.statSync(destinationPath).isFile()) {
+			console.log('-f ' + destinationPath);
+			fs.unlinkSync(destinationPath);
+			this._stats.deletedFiles++;
+		}
+		if (!fs.existsSync(destinationPath)) {
+			console.log('+d ' + destinationPath);
+			this._stats.newFolders++;
+		}
 		fs.mkdirSync(destinationPath, { recursive: true });
 		const encryptedFileNames = new Set<string>();
 		this.syncFolderForward(sourcePath, encryptedFileNames, destinationPath);
@@ -121,11 +130,12 @@ export class FolderEncryption {
 			if (!encryptedFileNames.has(fileName)) {
 				const destinationFilePath = path.join(destinationPath, fileName);
 				const fileInfo = fs.statSync(destinationFilePath);
+				console.log('-d ' + destinationFilePath);
 				if (fileInfo.isFile()) {
 					fs.unlinkSync(destinationFilePath);
 					this._stats.deletedFiles++;
 				} else if (fileInfo.isDirectory()) {
-					fs.rmdirSync(destinationFilePath, { recursive: true });
+					fs.rmSync(destinationFilePath, { recursive: true });
 					this._stats.deletedFolders++;
 				}
 			}
@@ -134,17 +144,28 @@ export class FolderEncryption {
 
 	private syncFile(sourcePath: string, destinationPath: string) {
 		let isEqual = false;
+		let isDamaged = false;
 		if (fs.existsSync(destinationPath) && fs.statSync(destinationPath).isDirectory()) {
-			fs.rmdirSync(destinationPath, { recursive: true });
+			console.log('-d ' + destinationPath);
+			fs.rmSync(destinationPath, { recursive: true });
 			this._stats.deletedFolders++;
 		}
 		if (fs.existsSync(destinationPath)) {
-			isEqual = this.encryption.compareFileWithEncrypted(sourcePath, destinationPath);
+			try {
+				isEqual = this.encryption.compareFileWithEncrypted(sourcePath, destinationPath);
+			} catch (e) {
+				if (e instanceof FileFormatError) {
+					isEqual = false;
+					isDamaged = true;
+				}
+			}
 			if (!isEqual) {
+				console.log((isDamaged ? 'xf ' : '~f ') + sourcePath + ' -> ' + destinationPath);
 				this.encryption.encryptFile(sourcePath, destinationPath);
 				this._stats.updatedFiles++;
 			}
 		} else {
+			console.log('+f ' + sourcePath + ' -> ' + destinationPath);
 			this.encryption.encryptFile(sourcePath, destinationPath);
 			this._stats.newFiles++;
 		}
@@ -153,6 +174,7 @@ export class FolderEncryption {
 
 export class FolderEncryptionStats {
 	public sourceFolders = 0;
+	public newFolders = 0;
 	public deletedFolders = 0;
 	public sourceFiles = 0;
 	public newFiles = 0;

@@ -12,6 +12,7 @@ test(FolderEncryption.prototype.sync.name, function () {
 	folderEncryption.sync();
 	const expectedStats = Object.assign(new FolderEncryptionStats(), {
 		sourceFolders: 1,
+		newFolders: 2,
 		deletedFolders: 0,
 		sourceFiles: 3,
 		newFiles: 3,
@@ -19,6 +20,7 @@ test(FolderEncryption.prototype.sync.name, function () {
 		deletedFiles: 0
 	});
 	assert.deepEqual(folderEncryption.stats, expectedStats);
+	expectedStats.newFolders = 0;
 	expectedStats.newFiles = 0;
 	folderEncryption.sync();
 	assert.deepEqual(folderEncryption.stats, expectedStats);
