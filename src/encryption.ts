@@ -1,6 +1,12 @@
 import crypto from 'crypto';
 import fs from 'fs';
-import { CHUNK_SIZE, FileFormatError, readPreSizedChunk, writePreSizedChunk } from './file';
+import {
+	CHUNK_SIZE,
+	FileFormatError,
+	readNextByte,
+	readPreSizedChunk,
+	writePreSizedChunk
+} from './file';
 
 const ENCRYPTION_ALGORITHM = 'aes-256-cbc';
 const HASHING_ALGORITHM = 'sha256';
@@ -58,7 +64,7 @@ export class Encryption {
 		const sourceFile = fs.openSync(sourceFilePath, 'r');
 		const destinationFile = fs.openSync(destinationFilePath, 'r');
 		const sourceBuffer = Buffer.alloc(CHUNK_SIZE);
-		const destinationBuffer = Buffer.alloc(NOISE_SIZE);
+		const destinationBuffer = Buffer.alloc(CHUNK_SIZE);
 		const noiseSize = fs.readSync(destinationFile, destinationBuffer, 0, NOISE_SIZE, null);
 		if (noiseSize !== NOISE_SIZE) {
 			throw new FileFormatError('Wrong noise from encrypted file');
@@ -68,8 +74,8 @@ export class Encryption {
 		while (isConsistent) {
 			const sourceSize = fs.readSync(sourceFile, sourceBuffer, 0, CHUNK_SIZE, null);
 			if (!sourceSize) {
-				const leftoverSize = fs.readSync(destinationFile, Buffer.alloc(1), 0, 1, null);
-				if (leftoverSize) isConsistent = false;
+				const leftoverByte = readNextByte(destinationFile);
+				if (leftoverByte !== undefined) isConsistent = false;
 				break;
 			}
 			const sourceBytes = sourceBuffer.subarray(0, sourceSize);

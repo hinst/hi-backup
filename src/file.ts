@@ -67,3 +67,10 @@ export function changeRandomByte(filePath: string) {
 	writeByteAt(file, offset, randomByte);
 	fs.closeSync(file);
 }
+
+export function readNextByte(file: number): number | undefined {
+	const buffer = Buffer.alloc(1);
+	const bytesRead = fs.readSync(file, buffer, 0, 1, null);
+	if (bytesRead !== 1) return undefined;
+	return buffer.readUInt8(0);
+}
