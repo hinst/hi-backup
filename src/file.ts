@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs, { read } from 'fs';
 import { INT32_SIZE, int32ToBuffer } from './array';
 
 export const CHUNK_SIZE = 1024 * 1024;
@@ -44,17 +44,26 @@ export function readPreSizedChunk(file: number): Buffer {
 	return buffer.subarray(0, chunkSize);
 }
 
+function readByteAt(file: number, offset: number): number {
+	const buffer = Buffer.alloc(1);
+	const bytesRead = fs.readSync(file, buffer, 0, 1, offset);
+	if (bytesRead !== 1) throw new Error('Cannot read byte at ' + offset);
+	return buffer.readUInt8(0);
+}
+
+function writeByteAt(file: number, offset: number, value: number): void {
+	const buffer = Buffer.alloc(1);
+	buffer.writeUInt8(value, 0);
+	const bytesWritten = fs.writeSync(file, buffer, 0, 1, offset);
+	if (bytesWritten !== 1) throw new Error('Cannot write byte at ' + offset);
+}
+
 export function changeRandomByte(filePath: string) {
 	const file = fs.openSync(filePath, 'r+');
 	const offset = Math.floor(Math.random() * fs.statSync(filePath).size);
-	const buffer = Buffer.alloc(1);
-	fs.readSync(file, buffer, 0, 1, offset);
-	const originalByte = buffer.readUInt8(0);
+	const originalByte = readByteAt(file, offset);
 	let randomByte = Math.floor(Math.random() * 256);
-	while (randomByte === originalByte) {
-		randomByte = Math.floor(Math.random() * 256);
-	}
-	buffer.writeUInt8(randomByte, 0);
-	fs.writeSync(file, buffer, 0, 1, offset);
+	while (randomByte === originalByte) randomByte = Math.floor(Math.random() * 256);
+	writeByteAt(file, offset, randomByte);
 	fs.closeSync(file);
 }
