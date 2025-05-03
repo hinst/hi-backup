@@ -2,7 +2,7 @@ import fs from 'fs';
 import { INT32_SIZE, int32ToBuffer } from './array';
 
 const MAX_CHUNK_SIZE = 100 * 1024 * 1024;
-const MAX_STRING_SIZE = 1024 * 1024;
+const MAX_BUFFER_SIZE = 1024 * 1024;
 
 export class FileFormatError extends Error {
 	constructor(message: string) {
@@ -23,26 +23,25 @@ function readInt32FromFile(file: number): number {
 	return buffer.readInt32LE(0);
 }
 
-export function writeStringToFile(file: number, str: string): void {
-	if (str.length > MAX_STRING_SIZE)
-		throw new FileFormatError('String is too large: ' + str.length);
-	const buffer = Buffer.from(str, 'utf-8');
+export function writeBufferToFile(file: number, buffer: Buffer): void {
+	if (buffer.length > MAX_BUFFER_SIZE)
+		throw new FileFormatError('Buffer is too large: ' + buffer.length);
 	writeInt32ToFile(file, buffer.length);
 	fs.writeSync(file, buffer, 0, buffer.length, null);
 }
 
-export function readStringFromFile(file: number): string {
+export function readBufferFromFile(file: number): Buffer {
 	const length = readInt32FromFile(file);
-	if (length < 0) throw new FileFormatError('Negative string length: ' + length);
-	if (length > MAX_STRING_SIZE)
-		throw new FileFormatError('String length is too large: ' + length);
+	if (length < 0) throw new FileFormatError('Negative buffer length: ' + length);
+	if (length > MAX_BUFFER_SIZE)
+		throw new FileFormatError('Buffer length is too large: ' + length);
 	const buffer = Buffer.alloc(length);
 	const bytesRead = fs.readSync(file, buffer, 0, length, null);
 	if (bytesRead !== length)
 		throw new FileFormatError(
 			'File format error: expected ' + length + ' bytes, got ' + bytesRead
 		);
-	return buffer.toString('utf-8');
+	return buffer;
 }
 
 export function writePreSizedChunk(file: number, data: Buffer) {

@@ -4,9 +4,9 @@ import {
 	FileFormatError,
 	readNextByte,
 	readPreSizedChunk,
-	readStringFromFile,
+	readBufferFromFile,
 	writePreSizedChunk,
-	writeStringToFile
+	writeBufferToFile
 } from './file';
 import path from 'path';
 
@@ -14,7 +14,7 @@ const CHUNK_SIZE = 1024 * 1024;
 const ENCRYPTION_ALGORITHM = 'aes-256-cbc';
 const HASHING_ALGORITHM = 'sha256';
 const NOISE_SIZE = 16;
-const SHORT_FILE_NAME_LENGTH = 32;
+const MAX_FILE_NAME_LENGTH = 32;
 
 export class Encryption {
 	constructor(private readonly password: string) {}
@@ -22,12 +22,12 @@ export class Encryption {
 	private _key?: Buffer;
 
 	private get key(): Buffer {
-		if (!this._key) this._key = Encryption.getHash(this.password).digest();
+		if (!this._key) this._key = Encryption.createHash().update(this.password).digest();
 		return this._key;
 	}
 
-	static getHash(text: string) {
-		return crypto.createHash(HASHING_ALGORITHM).update(text);
+	static createHash() {
+		return crypto.createHash(HASHING_ALGORITHM);
 	}
 
 	static createNoise() {
@@ -61,7 +61,7 @@ export class Encryption {
 		const noise = Encryption.createNoise();
 		fs.writeSync(outputFile, noise, 0, noise.length, null);
 		const fileName = path.basename(sourceFilePath);
-		writeStringToFile(outputFile, this.encryptFileName(fileName));
+		writeBufferToFile(outputFile, this.encryptText(noise, fileName));
 		while (true) {
 			const byteCount = fs.readSync(sourceFile, buffer, 0, CHUNK_SIZE, null);
 			if (!byteCount) break;
@@ -89,7 +89,7 @@ export class Encryption {
 		const destinationFile = fs.openSync(destinationFilePath, 'r');
 		const sourceBuffer = Buffer.alloc(CHUNK_SIZE);
 		const noise = Encryption.readNoise(destinationFile);
-		readStringFromFile(destinationFile);
+		readBufferFromFile(destinationFile);
 		let isConsistent = true;
 		while (isConsistent) {
 			const sourceSize = fs.readSync(sourceFile, sourceBuffer, 0, CHUNK_SIZE, null);
@@ -118,29 +118,30 @@ export class Encryption {
 		return isConsistent;
 	}
 
-	encryptFileName(name: string): string {
+	encryptText(noise: Uint8Array, name: string): Buffer {
 		let data = new TextEncoder().encode(name);
-		data = this.encrypt(Encryption.createDefaultNoise(), Buffer.from(data));
-		return Buffer.from(data).toString('base64');
+		data = this.encrypt(noise, Buffer.from(data));
+		return Buffer.from(data);
 	}
 
-	decryptFileName(name: string): string {
-		const data = Buffer.from(name, 'base64');
-		const decrypted = this.decrypt(Encryption.createDefaultNoise(), data);
+	decryptText(noise: Uint8Array, data: Buffer): string {
+		const decrypted = this.decrypt(noise, data);
 		return new TextDecoder().decode(decrypted);
 	}
 
-	runFolderBackup(sourcePath: string, destinationPath: string) {
+	encryptFolder(sourcePath: string, destinationPath: string) {
 		const files = fs.readdirSync(sourcePath);
 		const encryptedFileNames = new Set<string>();
 		for (const fileName of files) {
-			const encryptedFileName = this.encryptFileName(fileName);
-			const shortEncryptedName = Encryption.getHash(encryptedFileName)
+			const encryptedFileName = this.encryptText(Encryption.createDefaultNoise(), fileName);
+			const shortEncryptedName = Encryption.createHash()
+				.update(encryptedFileName)
 				.digest('hex')
-				.slice(0, SHORT_FILE_NAME_LENGTH);
+				.slice(0, MAX_FILE_NAME_LENGTH);
 			if (encryptedFileNames.has(shortEncryptedName))
 				throw new Error('Encrypted file name collision: ' + shortEncryptedName);
 			encryptedFileNames.add(shortEncryptedName);
 		}
+		console.log(encryptedFileNames);
 	}
 }

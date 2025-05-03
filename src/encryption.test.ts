@@ -42,11 +42,16 @@ test(Encryption.prototype.encryptFile.name, function () {
 	fs.unlinkSync(encryptedFilePath);
 });
 
-test(Encryption.prototype.encryptFileName.name, function () {
+test(Encryption.prototype.encryptText.name, function () {
 	const password = 'fileNamePassword';
 	const fileName = 'secret file.txt';
-	const encryptedFileName = new Encryption(password).encryptFileName(fileName);
-	const decryptedFileName = new Encryption(password).decryptFileName(encryptedFileName);
-	console.log(fileName.length, encryptedFileName.length, decryptedFileName.length);
+	const noise = Encryption.createNoise();
+	const encryptedFileName = new Encryption(password).encryptText(noise, fileName);
+	const decryptedFileName = new Encryption(password).decryptText(noise, encryptedFileName);
 	assert.equal(decryptedFileName, fileName);
+});
+
+test(Encryption.prototype.encryptFolder.name, function () {
+	const password = 'secretPassword';
+	new Encryption(password).encryptFolder('./dist', './test/dist.1');
 });
