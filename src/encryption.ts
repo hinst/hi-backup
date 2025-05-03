@@ -99,7 +99,6 @@ export class Encryption {
 				break;
 			}
 			const sourceBytes = sourceBuffer.subarray(0, sourceSize);
-
 			const encryptedBytes = readPreSizedChunk(destinationFile);
 			const decryptedBytes = this.decrypt(noise, encryptedBytes);
 			if (sourceBytes.length !== decryptedBytes.length) {
@@ -130,6 +129,7 @@ export class Encryption {
 	}
 
 	encryptFolder(sourcePath: string, destinationPath: string) {
+		fs.mkdirSync(destinationPath, { recursive: true });
 		const files = fs.readdirSync(sourcePath);
 		const encryptedFileNames = new Set<string>();
 		for (const fileName of files) {
@@ -141,6 +141,19 @@ export class Encryption {
 			if (encryptedFileNames.has(shortEncryptedName))
 				throw new Error('Encrypted file name collision: ' + shortEncryptedName);
 			encryptedFileNames.add(shortEncryptedName);
+			this.encryptFile(
+				path.join(sourcePath, fileName),
+				path.join(destinationPath, shortEncryptedName)
+			);
 		}
 	}
+}
+
+export class FolderSyncSummary {
+	constructor(
+		public readonly totalFiles: number,
+		public readonly newFiles: number,
+		public readonly updatedFiles: number,
+		public readonly deletedFiles: number
+	) {}
 }
