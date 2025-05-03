@@ -41,3 +41,12 @@ test(Encryption.prototype.encryptFile.name, function () {
 	assert.equal(compare(filePath, encryptedFilePath), false);
 	fs.unlinkSync(encryptedFilePath);
 });
+
+test(Encryption.prototype.encryptFileName.name, function () {
+	const password = 'fileNamePassword';
+	const fileName = 'secret file.txt';
+	const encryptedFileName = new Encryption(password).encryptFileName(fileName);
+	const decryptedFileName = new Encryption(password).decryptFileName(encryptedFileName);
+	console.log(fileName.length, encryptedFileName.length, decryptedFileName.length);
+	assert.equal(decryptedFileName, fileName);
+});
