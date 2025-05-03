@@ -61,7 +61,7 @@ export class Encryption {
 		const destinationBuffer = Buffer.alloc(CHUNK_SIZE);
 		const noiseSize = fs.readSync(destinationFile, destinationBuffer, 0, NOISE_SIZE, null);
 		if (noiseSize !== NOISE_SIZE) {
-			throw new Error('Wrong noise from encrypted file');
+			throw new FileFormatError('Wrong noise from encrypted file');
 		}
 		const noise = destinationBuffer.subarray(0, NOISE_SIZE);
 		let isConsistent = true;
@@ -75,14 +75,7 @@ export class Encryption {
 			const sourceBytes = sourceBuffer.subarray(0, sourceSize);
 
 			let encryptedBytes: Buffer;
-			try {
-				encryptedBytes = readPreSizedChunk(destinationFile);
-			} catch (e) {
-				if (e instanceof FileFormatError) {
-					isConsistent = false;
-					break;
-				} else throw e;
-			}
+			encryptedBytes = readPreSizedChunk(destinationFile);
 			const decryptedBytes = this.decrypt(noise, encryptedBytes);
 			if (sourceBytes.length !== decryptedBytes.length) {
 				isConsistent = false;

@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'assert';
 import fs from 'fs';
 import { Encryption } from './encryption';
+import { changeRandomByte, FileFormatError } from './file';
 
 test(Encryption.prototype.encrypt.name, function () {
 	const password = 'foo';
@@ -23,11 +24,20 @@ test(Encryption.prototype.encryptFile.name, function () {
 	const encryptedFilePath = 'test/SamplePNGImage_3mb.1';
 	new Encryption(password).encryptFile(filePath, encryptedFilePath);
 	function compare(plain: string, encrypted: string) {
-		return new Encryption(password).compareFileWithEncrypted(plain, encrypted);
+		try {
+			return new Encryption(password).compareFileWithEncrypted(plain, encrypted);
+		} catch (e) {
+			if (e instanceof FileFormatError) {
+				return false;
+			}
+			throw e;
+		}
 	}
 	assert.equal(compare(filePath, encryptedFilePath), true);
 	assert.equal(compare(otherFilePath, encryptedFilePath), false);
 	assert.equal(compare(filePath, filePath), false);
 	assert.equal(compare(otherFilePath, otherFilePath), false);
+	changeRandomByte(encryptedFilePath);
+	assert.equal(compare(filePath, encryptedFilePath), false);
 	fs.unlinkSync(encryptedFilePath);
 });
