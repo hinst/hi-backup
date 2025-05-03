@@ -17,7 +17,22 @@ export class FolderEncryption {
 		private readonly destinationPath: string
 	) {}
 
-	createShortEncryptedName(fileName: string): string {
+	sync() {
+		this._stats = new FolderEncryptionStats();
+		this.syncFolder(this.sourcePath, this.destinationPath);
+	}
+
+	unpack() {
+		this._stats = new FolderEncryptionStats();
+		this.unpackFolder(this.sourcePath, this.destinationPath);
+	}
+
+	private unpackFolder(sourcePath: string, destinationPath: string) {
+		const sourceFiles = fs.readdirSync(sourcePath);
+		fs.mkdirSync(destinationPath, { recursive: true });
+	}
+
+	private createShortEncryptedName(fileName: string): string {
 		const encryptedFileName = this.encryption.encryptText(
 			Encryption.createDefaultNoise(),
 			fileName
@@ -35,15 +50,19 @@ export class FolderEncryption {
 		encryptedFileNames.add(shortEncryptedName);
 	}
 
-	sync() {
-		this._stats = new FolderEncryptionStats();
-		this.syncFolder(this.sourcePath, this.destinationPath);
-	}
-
 	private syncFolder(sourcePath: string, destinationPath: string) {
-		const sourceFiles = fs.readdirSync(sourcePath);
 		fs.mkdirSync(destinationPath, { recursive: true });
 		const encryptedFileNames = new Set<string>();
+		this.syncFolderForward(sourcePath, encryptedFileNames, destinationPath);
+		this.syncFolderBackward(encryptedFileNames, destinationPath);
+	}
+
+	private syncFolderForward(
+		sourcePath: string,
+		encryptedFileNames: Set<string>,
+		destinationPath: string
+	) {
+		const sourceFiles = fs.readdirSync(sourcePath);
 		for (const fileName of sourceFiles) {
 			const sourceFilePath = path.join(sourcePath, fileName);
 			const shortEncryptedName = this.createShortEncryptedName(fileName);
@@ -60,6 +79,9 @@ export class FolderEncryption {
 				this._stats.sourceFolders++;
 			}
 		}
+	}
+
+	private syncFolderBackward(encryptedFileNames: Set<string>, destinationPath: string) {
 		const destinationFiles = fs.readdirSync(destinationPath);
 		for (const fileName of destinationFiles) {
 			if (!encryptedFileNames.has(fileName)) {
