@@ -22,14 +22,12 @@ test(Encryption.prototype.encryptFile.name, function () {
 	const otherFilePath = 'test/text.txt';
 	const encryptedFilePath = 'test/SamplePNGImage_3mb.1';
 	new Encryption(password).encryptFile(filePath, encryptedFilePath);
-	assert.equal(
-		new Encryption(password).compareFileWithEncrypted(filePath, encryptedFilePath),
-		true
-	);
-	assert.equal(new Encryption(password).compareFileWithEncrypted(filePath, filePath), false);
-	assert.equal(
-		new Encryption(password).compareFileWithEncrypted(otherFilePath, encryptedFilePath),
-		false
-	);
+	function compare(plain: string, encrypted: string) {
+		return new Encryption(password).compareFileWithEncrypted(plain, encrypted);
+	}
+	assert.equal(compare(filePath, encryptedFilePath), true);
+	assert.equal(compare(otherFilePath, encryptedFilePath), false);
+	assert.equal(compare(filePath, filePath), false);
+	assert.equal(compare(otherFilePath, otherFilePath), false);
 	fs.unlinkSync(encryptedFilePath);
 });
