@@ -1,6 +1,7 @@
 import test from 'node:test';
 import fs from 'fs';
 import assert from 'node:assert';
+import { compareSync } from 'dir-compare';
 import { FolderEncryption, FolderEncryptionStats } from './folderEncryption';
 
 test(FolderEncryption.prototype.sync.name, function () {
@@ -24,6 +25,10 @@ test(FolderEncryption.prototype.sync.name, function () {
 
 	folderEncryption = new FolderEncryption('password', './test.1', './test.0');
 	folderEncryption.unpack();
+
+	const comparison = compareSync('./test', './test.0', { compareContent: true });
+	assert.equal(comparison.same, true);
+	assert.equal(comparison.total, 4);
 
 	fs.rmdirSync('./test.1', { recursive: true });
 	fs.rmdirSync('./test.0', { recursive: true });
