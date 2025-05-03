@@ -75,15 +75,25 @@ export class FolderEncryption {
 				this._stats.sourceFiles++;
 			}
 			if (fileInfo.isDirectory()) {
+				this.saveFolderName(destinationFilePath, fileName);
 				this.syncFolder(sourceFilePath, destinationFilePath);
 				this._stats.sourceFolders++;
 			}
 		}
 	}
 
+	private saveFolderName(destinationFilePath: string, fileName: string) {
+		const noise = Encryption.createNoise();
+		fs.writeFileSync(
+			destinationFilePath + '.info',
+			Buffer.concat([noise, this.encryption.encrypt(noise, Buffer.from(fileName))])
+		);
+	}
+
 	private syncFolderBackward(encryptedFileNames: Set<string>, destinationPath: string) {
 		const destinationFiles = fs.readdirSync(destinationPath);
 		for (const fileName of destinationFiles) {
+			if (fileName.endsWith('.info')) continue;
 			if (!encryptedFileNames.has(fileName)) {
 				const destinationFilePath = path.join(destinationPath, fileName);
 				const fileInfo = fs.statSync(destinationFilePath);
