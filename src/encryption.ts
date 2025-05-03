@@ -12,6 +12,10 @@ export class Encryption {
 
 	private _key?: Buffer;
 
+	static createNoise() {
+		return crypto.randomBytes(NOISE_SIZE);
+	}
+
 	encrypt(noise: Uint8Array, data: Uint8Array) {
 		const cipher = crypto.createCipheriv(ENCRYPTION_ALGORITHM, this.key, noise);
 		cipher.update(data);
@@ -35,7 +39,7 @@ export class Encryption {
 	encryptFile(sourceFilePath: string, destinationFilePath: string) {
 		const sourceFile = fs.openSync(sourceFilePath, 'r');
 		const buffer = Buffer.alloc(CHUNK_SIZE);
-		const noise = crypto.randomBytes(NOISE_SIZE);
+		const noise = Encryption.createNoise();
 		const outputStream = fs.createWriteStream(destinationFilePath);
 		outputStream.write(noise);
 		while (true) {

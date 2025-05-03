@@ -1,10 +1,10 @@
 import test from 'node:test';
-import { Encryption } from './encryption';
 import assert from 'assert';
+import { Encryption } from './encryption';
 
 test(Encryption.prototype.encrypt.name, function () {
 	const password = 'foo';
-	const noise = new Uint8Array(new Array(16).fill(0).map((_, i) => i));
+	const noise = Encryption.createNoise();
 	const inputText = 'Hello world';
 	const inputData = new TextEncoder().encode(inputText);
 	const outputData = new Encryption(password).encrypt(noise, inputData);
@@ -13,4 +13,12 @@ test(Encryption.prototype.encrypt.name, function () {
 		new TextDecoder().decode(new Encryption(password).decrypt(noise, outputData)),
 		inputText
 	);
+});
+
+test(Encryption.prototype.encryptFile.name, function () {
+	const password = 'file';
+	const noise = Encryption.createNoise();
+	const filePath = 'test/SamplePNGImage_3mb.png';
+	const encryptedFilePath = 'test/SamplePNGImage_3mb.png.enc';
+	new Encryption(password).encryptFile(filePath, encryptedFilePath);
 });
