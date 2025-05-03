@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { Encryption } from './encryption';
-import { readBufferFromFile } from './file';
+import { readBufferFromFile, writeBufferToFile } from './file';
 
 const MAX_FILE_NAME_LENGTH = 32;
 const INFO_FILE_EXTENSION = '.info';
@@ -37,7 +37,6 @@ export class FolderEncryption {
 			const sourcePath = path.join(sourceFolderPath, fileName);
 			const fileInfo = fs.statSync(sourcePath);
 			if (fileInfo.isFile()) {
-				console.log(sourcePath);
 				this.encryption.decryptFile(sourcePath, destinationFolderPath);
 				this.stats.sourceFiles++;
 			}
@@ -100,11 +99,10 @@ export class FolderEncryption {
 	}
 
 	private saveFolderName(destinationFilePath: string, fileName: string) {
+		const file = fs.openSync(destinationFilePath, 'w');
 		const noise = Encryption.createNoise();
-		fs.writeFileSync(
-			destinationFilePath,
-			Buffer.concat([noise, this.encryption.encrypt(noise, Buffer.from(fileName))])
-		);
+		fs.writeSync(file, noise, 0, noise.length, null);
+		writeBufferToFile(file, this.encryption.encryptText(noise, fileName));
 	}
 
 	private loadFolderName(destinationFilePath: string): string {

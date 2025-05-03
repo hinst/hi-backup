@@ -2,7 +2,6 @@ import crypto from 'crypto';
 import fs from 'fs';
 import {
 	FileFormatError,
-	readNextByte,
 	readPreSizedChunk,
 	readBufferFromFile,
 	writePreSizedChunk,
