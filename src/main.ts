@@ -1,8 +1,7 @@
-import { encryptFile } from './encryption';
+import { Encryption } from './encryption';
 
-async function main() {
-	await encryptFile(
-		'password',
+function main() {
+	new Encryption('password').encryptFile(
 		'C:\\Dev\\hi-backup\\.prettierrc',
 		'C:\\Dev\\hi-backup\\test\\.prettierrc'
 	);
