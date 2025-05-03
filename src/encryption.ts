@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import fs from 'fs';
-import { CHUNK_SIZE, readPreSizedChunk, writePreSizedChunk } from './file';
+import { CHUNK_SIZE, FileFormatError, readPreSizedChunk, writePreSizedChunk } from './file';
 
 const ENCRYPTION_ALGORITHM = 'aes-256-cbc';
 const HASHING_ALGORITHM = 'sha256';
@@ -74,10 +74,14 @@ export class Encryption {
 			}
 			const sourceBytes = sourceBuffer.subarray(0, sourceSize);
 
-			const encryptedBytes = readPreSizedChunk(destinationFile);
-			if (!encryptedBytes) {
-				isConsistent = false;
-				break;
+			let encryptedBytes: Buffer;
+			try {
+				encryptedBytes = readPreSizedChunk(destinationFile);
+			} catch (e) {
+				if (e instanceof FileFormatError) {
+					isConsistent = false;
+					break;
+				} else throw e;
 			}
 			const decryptedBytes = this.decrypt(noise, encryptedBytes);
 			if (sourceBytes.length !== decryptedBytes.length) {

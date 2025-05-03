@@ -26,6 +26,7 @@ test(Encryption.prototype.encryptFile.name, function () {
 		new Encryption(password).compareFileWithEncrypted(filePath, encryptedFilePath),
 		true
 	);
+	assert.equal(new Encryption(password).compareFileWithEncrypted(filePath, filePath), false);
 	assert.equal(
 		new Encryption(password).compareFileWithEncrypted(otherFilePath, encryptedFilePath),
 		false
