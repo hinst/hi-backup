@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'assert';
+import fs from 'fs';
 import { Encryption } from './encryption';
 
 test(Encryption.prototype.encrypt.name, function () {
@@ -7,7 +8,7 @@ test(Encryption.prototype.encrypt.name, function () {
 	const noise = Encryption.createNoise();
 	const inputText = 'Hello world';
 	const inputData = new TextEncoder().encode(inputText);
-	const outputData = new Encryption(password).encrypt(noise, inputData);
+	const outputData = new Encryption(password).encrypt(noise, Buffer.from(inputData));
 	assert.notEqual(new TextDecoder().decode(outputData), inputText);
 	assert.equal(
 		new TextDecoder().decode(new Encryption(password).decrypt(noise, outputData)),
@@ -29,4 +30,5 @@ test(Encryption.prototype.encryptFile.name, function () {
 		new Encryption(password).compareFileWithEncrypted(otherFilePath, encryptedFilePath),
 		false
 	);
+	fs.unlinkSync(encryptedFilePath);
 });

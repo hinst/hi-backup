@@ -1,6 +1,5 @@
 import crypto from 'crypto';
 import fs from 'fs';
-import { bufferToArray } from './array';
 import { CHUNK_SIZE, readPreSizedChunk, writePreSizedChunk } from './file';
 
 const ENCRYPTION_ALGORITHM = 'aes-256-cbc';
@@ -16,20 +15,20 @@ export class Encryption {
 		return crypto.randomBytes(NOISE_SIZE);
 	}
 
-	encrypt(noise: Uint8Array, data: Uint8Array) {
+	encrypt(noise: Uint8Array, data: Buffer) {
 		const cipher = crypto.createCipheriv(ENCRYPTION_ALGORITHM, this.key, noise);
 		const buffer1 = cipher.update(data);
 		const buffer2 = cipher.final();
 		const output = Buffer.concat([buffer1, buffer2]);
-		return bufferToArray(output);
+		return output;
 	}
 
-	decrypt(noise: Uint8Array, data: Uint8Array) {
+	decrypt(noise: Uint8Array, data: Buffer) {
 		const decipher = crypto.createDecipheriv(ENCRYPTION_ALGORITHM, this.key, noise);
 		const buffer1 = decipher.update(data);
 		const buffer2 = decipher.final();
 		const output = Buffer.concat([buffer1, buffer2]);
-		return bufferToArray(output);
+		return output;
 	}
 
 	private get key(): Buffer {
@@ -42,17 +41,17 @@ export class Encryption {
 		const sourceFile = fs.openSync(sourceFilePath, 'r');
 		const buffer = Buffer.alloc(CHUNK_SIZE);
 		const noise = Encryption.createNoise();
-		const outputStream = fs.createWriteStream(destinationFilePath);
-		outputStream.write(noise);
+		const outputFile = fs.openSync(destinationFilePath, 'w');
+		fs.writeSync(outputFile, noise, 0, noise.length, null);
 		while (true) {
 			const byteCount = fs.readSync(sourceFile, buffer, 0, CHUNK_SIZE, null);
 			if (!byteCount) break;
-			const bytes = bufferToArray(buffer.subarray(0, byteCount));
+			const bytes = buffer.subarray(0, byteCount);
 			const encryptedBytes = this.encrypt(noise, bytes);
-			writePreSizedChunk(outputStream, encryptedBytes);
+			writePreSizedChunk(outputFile, encryptedBytes);
 		}
 		fs.closeSync(sourceFile);
-		outputStream.close();
+		fs.closeSync(outputFile);
 	}
 
 	compareFileWithEncrypted(sourceFilePath: string, destinationFilePath: string): boolean {
@@ -64,7 +63,7 @@ export class Encryption {
 		if (noiseSize !== NOISE_SIZE) {
 			throw new Error('Wrong noise from encrypted file');
 		}
-		const noise = bufferToArray(destinationBuffer.subarray(0, NOISE_SIZE));
+		const noise = destinationBuffer.subarray(0, NOISE_SIZE);
 		let isConsistent = true;
 		while (isConsistent) {
 			const sourceSize = fs.readSync(sourceFile, sourceBuffer, 0, CHUNK_SIZE, null);
@@ -73,7 +72,7 @@ export class Encryption {
 				if (leftoverSize) isConsistent = false;
 				break;
 			}
-			const sourceBytes = bufferToArray(sourceBuffer.subarray(0, sourceSize));
+			const sourceBytes = sourceBuffer.subarray(0, sourceSize);
 
 			const encryptedBytes = readPreSizedChunk(destinationFile);
 			if (!encryptedBytes) {
