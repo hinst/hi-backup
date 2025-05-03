@@ -14,7 +14,6 @@ const CHUNK_SIZE = 1024 * 1024;
 const ENCRYPTION_ALGORITHM = 'aes-256-cbc';
 const HASHING_ALGORITHM = 'sha256';
 const NOISE_SIZE = 16;
-const MAX_FILE_NAME_LENGTH = 32;
 
 export class Encryption {
 	constructor(private readonly password: string) {}
@@ -126,26 +125,6 @@ export class Encryption {
 	decryptText(noise: Uint8Array, data: Buffer): string {
 		const decrypted = this.decrypt(noise, data);
 		return new TextDecoder().decode(decrypted);
-	}
-
-	encryptFolder(sourcePath: string, destinationPath: string) {
-		fs.mkdirSync(destinationPath, { recursive: true });
-		const files = fs.readdirSync(sourcePath);
-		const encryptedFileNames = new Set<string>();
-		for (const fileName of files) {
-			const encryptedFileName = this.encryptText(Encryption.createDefaultNoise(), fileName);
-			const shortEncryptedName = Encryption.createHash()
-				.update(encryptedFileName)
-				.digest('hex')
-				.slice(0, MAX_FILE_NAME_LENGTH);
-			if (encryptedFileNames.has(shortEncryptedName))
-				throw new Error('Encrypted file name collision: ' + shortEncryptedName);
-			encryptedFileNames.add(shortEncryptedName);
-			this.encryptFile(
-				path.join(sourcePath, fileName),
-				path.join(destinationPath, shortEncryptedName)
-			);
-		}
 	}
 }
 

@@ -3,6 +3,7 @@ import assert from 'assert';
 import fs from 'fs';
 import { Encryption } from './encryption';
 import { changeRandomByte, FileFormatError } from './file';
+import { FolderEncryption } from './folderEncryption';
 
 test(Encryption.prototype.encrypt.name, function () {
 	const password = 'foo';
@@ -49,9 +50,4 @@ test(Encryption.prototype.encryptText.name, function () {
 	const encryptedFileName = new Encryption(password).encryptText(noise, fileName);
 	const decryptedFileName = new Encryption(password).decryptText(noise, encryptedFileName);
 	assert.equal(decryptedFileName, fileName);
-});
-
-test(Encryption.prototype.encryptFolder.name, function () {
-	const password = 'secretPassword';
-	new Encryption(password).encryptFolder('./dist', './test/dist.1');
 });
