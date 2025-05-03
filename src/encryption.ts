@@ -86,8 +86,7 @@ export class Encryption {
 			}
 			const sourceBytes = sourceBuffer.subarray(0, sourceSize);
 
-			let encryptedBytes: Buffer;
-			encryptedBytes = readPreSizedChunk(destinationFile);
+			const encryptedBytes = readPreSizedChunk(destinationFile);
 			const decryptedBytes = this.decrypt(noise, encryptedBytes);
 			if (sourceBytes.length !== decryptedBytes.length) {
 				isConsistent = false;
