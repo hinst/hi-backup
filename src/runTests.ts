@@ -1,3 +1,4 @@
+import 'source-map-support/register';
 import fs from 'fs';
 
 fs.readdirSync('dist').forEach((file) => {
