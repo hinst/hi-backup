@@ -17,6 +17,12 @@ export class Encryption {
 
 	private _key?: Buffer;
 
+	private get key(): Buffer {
+		if (!this._key)
+			this._key = crypto.createHash(HASHING_ALGORITHM).update(this.password).digest();
+		return this._key;
+	}
+
 	static createNoise() {
 		return crypto.randomBytes(NOISE_SIZE);
 	}
@@ -35,12 +41,6 @@ export class Encryption {
 		const buffer2 = decipher.final();
 		const output = Buffer.concat([buffer1, buffer2]);
 		return output;
-	}
-
-	private get key(): Buffer {
-		if (!this._key)
-			this._key = crypto.createHash(HASHING_ALGORITHM).update(this.password).digest();
-		return this._key;
 	}
 
 	encryptFile(sourceFilePath: string, destinationFilePath: string) {
