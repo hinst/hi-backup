@@ -2,7 +2,7 @@ import fs from 'fs';
 import { INT32_SIZE, int32ToBuffer } from './array';
 
 export const CHUNK_SIZE = 1024 * 1024;
-const MAX_CHUNK_SIZE = 100 * 1024 * 1024; // 1GB
+const MAX_CHUNK_SIZE = 100 * 1024 * 1024;
 
 export class FileFormatError extends Error {
 	constructor(message: string) {
