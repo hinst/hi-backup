@@ -14,8 +14,8 @@ test(FolderEncryption.prototype.sync.name, function () {
 		sourceFolders: 1,
 		newFolders: 2,
 		deletedFolders: 0,
-		sourceFiles: 3,
-		newFiles: 3,
+		sourceFiles: 4,
+		newFiles: 4,
 		updatedFiles: 0,
 		deletedFiles: 0
 	});
@@ -30,7 +30,7 @@ test(FolderEncryption.prototype.sync.name, function () {
 
 	const comparison = compareSync('./test', './test.0', { compareContent: true });
 	assert.equal(comparison.same, true);
-	assert.equal(comparison.total, 4);
+	assert.equal(comparison.total, 5);
 
 	fs.rmSync('./test.1', { recursive: true });
 	fs.rmSync('./test.0', { recursive: true });
