@@ -5,7 +5,9 @@ import {
 	readPreSizedChunk,
 	readBufferFromFile,
 	writePreSizedChunk,
-	writeBufferToFile
+	writeBufferToFile,
+	compressBuffer,
+	inflateBuffer
 } from './file';
 import path from 'path';
 
@@ -37,6 +39,7 @@ export class Encryption {
 	}
 
 	encrypt(noise: Uint8Array, data: Buffer) {
+		data = compressBuffer(data);
 		const cipher = crypto.createCipheriv(ENCRYPTION_ALGORITHM, this.key, noise);
 		const buffer1 = cipher.update(data);
 		const buffer2 = cipher.final();
@@ -48,7 +51,8 @@ export class Encryption {
 		const decipher = crypto.createDecipheriv(ENCRYPTION_ALGORITHM, this.key, noise);
 		const buffer1 = decipher.update(data);
 		const buffer2 = decipher.final();
-		const output = Buffer.concat([buffer1, buffer2]);
+		let output = Buffer.concat([buffer1, buffer2]);
+		output = inflateBuffer(output);
 		return output;
 	}
 

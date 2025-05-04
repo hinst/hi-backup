@@ -1,4 +1,5 @@
 import fs from 'fs';
+import zlib from 'zlib';
 import { INT32_SIZE, int32ToBuffer } from './array';
 
 const MAX_CHUNK_SIZE = 100 * 1024 * 1024;
@@ -94,4 +95,18 @@ export function readNextByte(file: number): number | undefined {
 	const bytesRead = fs.readSync(file, buffer, 0, 1, null);
 	if (bytesRead !== 1) return undefined;
 	return buffer.readUInt8(0);
+}
+
+export function compressBuffer(buffer: Buffer): Buffer {
+	return zlib.deflateSync(buffer);
+}
+
+export function inflateBuffer(buffer: Buffer): Buffer {
+	try {
+		return zlib.inflateSync(buffer);
+	} catch (e: any) {
+		if (e.code === 'Z_DATA_ERROR')
+			throw new FileFormatError('Compression format error');
+		else throw e;
+	}
 }
