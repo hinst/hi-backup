@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { Encryption } from './encryption';
 import { FileFormatError, readBufferFromFile, writeBufferToFile } from './file';
+import chalk from 'chalk';
 
 const MAX_FILE_NAME_LENGTH = 32;
 const INFO_FILE_EXTENSION = '.info';
@@ -76,12 +77,12 @@ export class FolderEncryption {
 
 	private syncFolder(sourcePath: string, destinationPath: string) {
 		if (fs.existsSync(destinationPath) && fs.statSync(destinationPath).isFile()) {
-			console.log('-f ' + destinationPath);
+			console.log(chalk.redBright('-f ') + destinationPath);
 			fs.unlinkSync(destinationPath);
 			this._stats.deletedFiles++;
 		}
 		if (!fs.existsSync(destinationPath)) {
-			console.log('+d ' + destinationPath);
+			console.log(chalk.green('+d ') + destinationPath);
 			this._stats.newFolders++;
 		}
 		fs.mkdirSync(destinationPath, { recursive: true });
@@ -139,11 +140,11 @@ export class FolderEncryption {
 				const destinationFilePath = path.join(destinationPath, fileName);
 				const fileInfo = fs.statSync(destinationFilePath);
 				if (fileInfo.isFile()) {
-					console.log('-f ' + destinationFilePath);
+					console.log(chalk.redBright('-f ') + destinationFilePath);
 					fs.unlinkSync(destinationFilePath);
 					this._stats.deletedFiles++;
 				} else if (fileInfo.isDirectory()) {
-					console.log('-d ' + destinationFilePath);
+					console.log(chalk.red('-d ') + destinationFilePath);
 					this.deleteEncryptedFolder(destinationFilePath);
 					this._stats.deletedFolders++;
 				}
@@ -161,7 +162,7 @@ export class FolderEncryption {
 		let isEqual = false;
 		let isDamaged = false;
 		if (fs.existsSync(destinationPath) && fs.statSync(destinationPath).isDirectory()) {
-			console.log('-d ' + destinationPath);
+			console.log(chalk.red('-d ') + destinationPath);
 			this.deleteEncryptedFolder(destinationPath);
 			this._stats.deletedFolders++;
 		}
@@ -175,12 +176,17 @@ export class FolderEncryption {
 				}
 			}
 			if (!isEqual) {
-				console.log((isDamaged ? 'xf ' : '~f ') + sourcePath + ' -> ' + destinationPath);
+				console.log(
+					(isDamaged ? chalk.yellow('xf ') : chalk.blue('~f ')) +
+						sourcePath +
+						' -> ' +
+						destinationPath
+				);
 				this.encryption.encryptFile(sourcePath, destinationPath);
 				this._stats.updatedFiles++;
 			}
 		} else {
-			console.log('+f ' + sourcePath + ' -> ' + destinationPath);
+			console.log(chalk.greenBright('+f ') + sourcePath + ' -> ' + destinationPath);
 			this.encryption.encryptFile(sourcePath, destinationPath);
 			this._stats.newFiles++;
 		}
