@@ -19,6 +19,7 @@ Usage:
 	* `source=directory`
 	* `destination=directory`
 	* `password=...`
+	* Optional: `ignoredList=["file1", "file2"]` these files in source root will be ignored
 	* Unpack the encrypted directory:
 		* `unpack=true`
 		* For unpacking, the old `destination` becomes `source`, so remember to swap those parameters

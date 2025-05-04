@@ -16,7 +16,8 @@ export class FolderEncryption {
 	constructor(
 		private readonly password: string,
 		private readonly sourcePath: string,
-		private readonly destinationPath: string
+		private readonly destinationPath: string,
+		private readonly ignoredList: string[] = []
 	) {}
 
 	sync() {
@@ -29,10 +30,17 @@ export class FolderEncryption {
 		this.unpackFolder(this.sourcePath, this.destinationPath);
 	}
 
+	private checkIgnored(fileName: string): boolean {
+		return this.ignoredList.some(
+			(ignoredFile) => ignoredFile.toLowerCase().trim() === fileName.toLowerCase().trim()
+		);
+	}
+
 	private unpackFolder(sourceFolderPath: string, destinationFolderPath: string) {
 		const sourceFiles = fs.readdirSync(sourceFolderPath);
 		fs.mkdirSync(destinationFolderPath, { recursive: true });
 		for (const fileName of sourceFiles) {
+			if (sourceFolderPath === this.sourcePath && this.checkIgnored(fileName)) continue;
 			if (fileName.endsWith(INFO_FILE_EXTENSION)) continue;
 			const sourcePath = path.join(sourceFolderPath, fileName);
 			const fileInfo = fs.statSync(sourcePath);
