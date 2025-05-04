@@ -92,6 +92,14 @@ export class Encryption {
 		fs.closeSync(sourceFile);
 	}
 
+	decryptFileName(sourceFilePath: string): string {
+		const sourceFile = fs.openSync(sourceFilePath, 'r');
+		const noise = Encryption.readNoise(sourceFile);
+		const fileName = this.decryptText(noise, readBufferFromFile(sourceFile));
+		fs.closeSync(sourceFile);
+		return fileName;
+	}
+
 	static readNoise(file: number): Buffer {
 		const buffer = Buffer.alloc(NOISE_SIZE);
 		const bytesRead = fs.readSync(file, buffer, 0, NOISE_SIZE, null);

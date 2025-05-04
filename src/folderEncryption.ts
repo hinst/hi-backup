@@ -77,7 +77,12 @@ export class FolderEncryption {
 
 	private syncFolder(sourcePath: string, destinationPath: string) {
 		if (fs.existsSync(destinationPath) && fs.statSync(destinationPath).isFile()) {
-			console.log(chalk.redBright('-f ') + destinationPath);
+			console.log(
+				chalk.redBright('-f ') +
+					destinationPath +
+					'\n\t' +
+					this.encryption.decryptFileName(destinationPath)
+			);
 			fs.unlinkSync(destinationPath);
 			this._stats.deletedFiles++;
 		}
@@ -140,12 +145,17 @@ export class FolderEncryption {
 				const destinationFilePath = path.join(destinationPath, fileName);
 				const fileInfo = fs.statSync(destinationFilePath);
 				if (fileInfo.isFile()) {
-					console.log(chalk.redBright('-f ') + destinationFilePath);
+					console.log(
+						chalk.redBright('-f ') +
+							destinationFilePath +
+							'\n\t' +
+							this.encryption.decryptFileName(destinationFilePath)
+					);
 					fs.unlinkSync(destinationFilePath);
 					this._stats.deletedFiles++;
 				} else if (fileInfo.isDirectory()) {
-					console.log(chalk.red('-d ') + destinationFilePath);
-					this.deleteEncryptedFolder(destinationFilePath);
+					const folderName = this.deleteEncryptedFolder(destinationFilePath);
+					console.log(chalk.red('-d ') + destinationFilePath + '\n\t' + folderName);
 					this._stats.deletedFolders++;
 				}
 			}
@@ -155,15 +165,20 @@ export class FolderEncryption {
 	private deleteEncryptedFolder(path: string) {
 		fs.rmSync(path, { recursive: true });
 		const infoPath = path + INFO_FILE_EXTENSION;
-		if (fs.existsSync(infoPath)) fs.unlinkSync(infoPath);
+		let name = '';
+		if (fs.existsSync(infoPath)) {
+			name = this.loadFolderName(infoPath);
+			fs.unlinkSync(infoPath);
+		}
+		return name;
 	}
 
 	private syncFile(sourcePath: string, destinationPath: string) {
 		let isEqual = false;
 		let isDamaged = false;
 		if (fs.existsSync(destinationPath) && fs.statSync(destinationPath).isDirectory()) {
-			console.log(chalk.red('-d ') + destinationPath);
-			this.deleteEncryptedFolder(destinationPath);
+			const folderName = this.deleteEncryptedFolder(destinationPath);
+			console.log(chalk.red('-d ') + destinationPath + '\n\t' + folderName);
 			this._stats.deletedFolders++;
 		}
 		if (fs.existsSync(destinationPath)) {
