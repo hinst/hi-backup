@@ -65,3 +65,20 @@ test(FolderEncryption.prototype.sync.name + '.addAndDelete', function () {
 	if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
 	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
 });
+
+test(FolderEncryption.prototype.sync.name + '.wrongPassword', function () {
+	if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
+	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
+
+	new FolderEncryption('password', './test', './test.1').sync();
+	let error: any;
+	try {
+		new FolderEncryption('password1', './test.1', './test.0').unpack();
+	} catch (e) {
+		error = e;
+	}
+	assert.equal(error.reason, 'bad decrypt');
+
+	if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
+	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
+});
