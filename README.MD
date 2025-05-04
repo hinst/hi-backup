@@ -9,7 +9,10 @@ Features:
 	* Using built-in zlib
 * Only changed files are copied, saving SSD and memory card lifespan
 * Programming language: TypeScript
-* Runtime: Node.js
+* Runtime: Node.js 22
+
+Build:
+* `npm run build`
 
 Usage:
 * Prepare .env file with parameters:
