@@ -132,11 +132,9 @@ export class Encryption {
 				isConsistent = false;
 				break;
 			}
-			for (let i = 0; i < sourceBytes.length; i++) {
-				if (sourceBytes[i] !== decryptedBytes[i]) {
-					isConsistent = false;
-					break;
-				}
+			if (sourceBytes.compare(decryptedBytes) !== 0) {
+				isConsistent = false;
+				break;
 			}
 		}
 		fs.closeSync(sourceFile);
