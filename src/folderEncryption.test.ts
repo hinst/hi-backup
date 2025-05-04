@@ -82,3 +82,24 @@ test(FolderEncryption.prototype.sync.name + '.wrongPassword', function () {
 	if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
 	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
 });
+
+test(FolderEncryption.prototype.sync.name + '.editFile', function () {
+	if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
+	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
+
+	new FolderEncryption('password', './test', './test.1').sync();
+	const originalText = fs.readFileSync('./test/folder/text.txt', 'utf-8');
+	fs.writeFileSync('./test/folder/text.txt', 'changed text');
+	const folderEncryption = new FolderEncryption('password', './test', './test.1');
+	folderEncryption.sync();
+	assert.equal(folderEncryption.stats.updatedFiles, 1);
+	assert.equal(folderEncryption.stats.newFiles, 0);
+
+	new FolderEncryption('password', './test.1', './test.0').unpack();
+	assert.equal(true, compareSync('./test', './test.0', { compareContent: true }).same);
+
+	fs.writeFileSync('./test/folder/text.txt', originalText);
+
+	if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
+	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
+});
