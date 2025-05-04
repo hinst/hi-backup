@@ -21,8 +21,8 @@ const folderEncryption = new FolderEncryption(
 	destinationFolder,
 	ignoredList
 );
-console.time('\tdone');
+console.time('done');
 if (unpack) folderEncryption.unpack();
 else folderEncryption.sync();
-console.timeEnd('\tdone');
 console.log(folderEncryption.stats);
+console.timeEnd('done');

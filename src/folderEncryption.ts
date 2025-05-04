@@ -41,7 +41,6 @@ export class FolderEncryption {
 		const sourceFiles = fs.readdirSync(sourceFolderPath);
 		fs.mkdirSync(destinationFolderPath, { recursive: true });
 		for (const fileName of sourceFiles) {
-			if (sourceFolderPath === this.sourcePath && this.checkIgnored(fileName)) continue;
 			if (fileName.endsWith(INFO_FILE_EXTENSION)) continue;
 			const sourcePath = path.join(sourceFolderPath, fileName);
 			const fileInfo = fs.statSync(sourcePath);
@@ -103,6 +102,7 @@ export class FolderEncryption {
 	) {
 		const sourceFiles = fs.readdirSync(sourcePath);
 		for (const fileName of sourceFiles) {
+			if (sourcePath === this.sourcePath && this.checkIgnored(fileName)) continue;
 			const sourceFilePath = path.join(sourcePath, fileName);
 			const shortEncryptedName = this.createShortEncryptedName(fileName);
 			this.addUniqueFileName(encryptedFileNames, shortEncryptedName);
