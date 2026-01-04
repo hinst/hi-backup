@@ -1,20 +1,21 @@
 # hi-backup
 
-Features:
+## Features:
 * Directory mirroring
 * Encryption
 	* Encrypting file names and contents
 	* Using the built-in encryption aes-256-cbc
 * Compression
 	* Using built-in zlib
-* Only changed files are copied, saving SSD and memory card lifespan
-* Programming language: TypeScript
-* Runtime: Node.js 22
+* Only changed files are copied, saving storage memory lifespan
 
-Build:
+## Build:
+
+* Runtime: Node.js 24
+* `npm install`
 * `npm run build`
 
-Usage:
+## Usage:
 * Prepare .env file with parameters:
 	* `source=directory`
 	* `destination=directory`
