@@ -17,7 +17,7 @@ const HASHING_ALGORITHM = 'sha256';
 const NOISE_SIZE = 16;
 
 export class Encryption {
-	constructor(private readonly password: string) {}
+	constructor(private readonly password: string) { }
 
 	private _key?: Buffer;
 
@@ -51,9 +51,9 @@ export class Encryption {
 		const decipher = crypto.createDecipheriv(ENCRYPTION_ALGORITHM, this.key, noise);
 		const buffer1 = decipher.update(data);
 		const buffer2 = decipher.final();
-		let output = Buffer.concat([buffer1, buffer2]);
-		output = inflateBuffer(output);
-		return output;
+		const output = Buffer.concat([buffer1, buffer2]);
+		const inflatedOutput = inflateBuffer(output);
+		return inflatedOutput;
 	}
 
 	encryptFile(sourceFilePath: string, destinationFilePath: string) {
