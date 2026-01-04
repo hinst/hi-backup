@@ -16,7 +16,7 @@
 * `npm run build`
 
 ## Usage:
-* Prepare .env file with parameters:
+* Prepare `.env` file with parameters
 	* `source=directory`
 	* `destination=directory`
 	* `password=...`
@@ -24,4 +24,4 @@
 	* Unpack the encrypted directory:
 		* `unpack=true`
 		* For unpacking, the old `destination` becomes `source`, so remember to swap those parameters
-* Launch: `node --env-file=your-config.env dist/main.js`
+* Launch: `node --env-file=config/file.env dist/main.js`
