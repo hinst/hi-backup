@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import chalk from 'chalk';
-import { compressFile } from './compression';
+import { compareCompressedFile, compressFile } from './compression';
 import { FolderSyncStats } from './folderStats';
 
 const GZ_FILE_EXTENSION = '.gz';
@@ -61,6 +61,9 @@ export class FolderMirroring {
 		if (fs.existsSync(destinationFilePath) && fs.statSync(destinationFilePath).isDirectory()) {
 			fs.rmSync(destinationFilePath, { recursive: true });
 			console.log(chalk.red('-d ') + destinationFilePath);
+		}
+		if (fs.existsSync(destinationFilePath) && fs.statSync(destinationFilePath).isFile()) {
+			const areEqual = await compareCompressedFile(sourceFilePath, destinationFilePath);
 		}
 		await compressFile(sourceFilePath, destinationFilePath);
 	}

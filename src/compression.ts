@@ -83,6 +83,10 @@ export async function compareCompressedFile(
 				equal = false;
 		});
 		equal = equal && 0 === fs.readSync(sourceFile, Buffer.alloc(1), 0, 1, null);
+	} catch (e) {
+		if ((e as AnyError).code === 'Z_DATA_ERROR')
+			throw new FileFormatError('Compression format error');
+		else throw e;
 	} finally {
 		fs.closeSync(sourceFile);
 	}
