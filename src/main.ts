@@ -1,28 +1,56 @@
 import 'source-map-support/register';
+import fs from 'node:fs';
 import process from 'node:process';
 import { FolderEncryption } from './folderEncryption';
+import { FolderMirroring } from './folderMirroring';
+import { TaskCommand, TaskConfig } from './taskConfig';
 
-function requireEnvironmentString(key: string): string {
-	const text = process.env[key];
-	if (!text?.length) throw new Error('Required string is missing');
-	return text;
+async function main() {
+	const configFilePath = process.argv[2];
+	if (!configFilePath?.length)
+		console.log('Please provide config file path as command line argument');
+	console.log('Using config: ' + configFilePath);
+	const tasks: TaskConfig[] = JSON.parse(fs.readFileSync(configFilePath).toString());
+	if (!tasks?.length) console.warn('There are no tasks');
+	for (const taskData of tasks) {
+		const task = Object.assign(TaskConfig.createEmpty(), taskData);
+		task.validate();
+		console.log(task);
+		switch (task.command) {
+			case TaskCommand.MIRROR: {
+				const mirroring = new FolderMirroring(task.sourcePath, task.targetPath);
+				await mirroring.sync();
+				break;
+			}
+		}
+	}
 }
 
-const sourceFolder = requireEnvironmentString('source');
-const destinationFolder = requireEnvironmentString('destination');
-const password = requireEnvironmentString('password');
-const unpack = process.env.unpack === 'true';
-const ignoredList = JSON.parse(process.env.ignoredList || '[]');
+const _ = main();
 
-console.log((unpack ? 'Unpacking ' : 'Encrypting ') + sourceFolder + ' -> ' + destinationFolder);
-const folderEncryption = new FolderEncryption(
-	password,
-	sourceFolder,
-	destinationFolder,
-	ignoredList,
-);
-console.time('done');
-if (unpack) folderEncryption.unpack();
-else folderEncryption.sync();
-console.log(folderEncryption.stats);
-console.timeEnd('done');
+function oldMain() {
+	function requireEnvironmentString(key: string): string {
+		const text = process.env[key];
+		if (!text?.length) throw new Error('Required string is missing');
+		return text;
+	}
+
+	const sourceFolder = requireEnvironmentString('source');
+	const destinationFolder = requireEnvironmentString('destination');
+	const password = requireEnvironmentString('password');
+	const unpack = process.env.unpack === 'true';
+	const ignoredList = JSON.parse(process.env.ignoredList || '[]');
+
+	console.log((unpack ? 'Unpacking ' : 'Encrypting ') + sourceFolder + ' -> ' + destinationFolder);
+	const folderEncryption = new FolderEncryption(
+		password,
+		sourceFolder,
+		destinationFolder,
+		ignoredList,
+	);
+	console.time('done');
+	if (unpack) folderEncryption.unpack();
+	else folderEncryption.sync();
+	console.log(folderEncryption.stats);
+	console.timeEnd('done');
+}
