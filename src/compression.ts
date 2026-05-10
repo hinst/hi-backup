@@ -33,43 +33,45 @@ export async function compareCompressedFile(
 	sourcePath: string,
 	targetPath: string,
 ): Promise<boolean> {
-	let sourceFile = fs.openSync(sourcePath, 'r');
+	const sourceFile = fs.openSync(sourcePath, 'r');
 	const target = fs.createReadStream(targetPath);
 	const gunzip = zlib.createGunzip();
 	const decompressed = target.pipe(gunzip);
+	let alive = true;
 
 	function close() {
-		if (sourceFile !== -1) {
-			fs.closeSync(sourceFile);
-			sourceFile = -1;
-		}
+		if (!alive) return;
+		fs.closeSync(sourceFile);
 		gunzip.destroy();
 		target.destroy();
+		alive = false;
 	}
 
 	return new Promise((resolve, reject) => {
-		function readSource(buffer: Buffer, size: number): number {
+		function readSource(buffer: Buffer, size: number) {
 			try {
 				return fs.readSync(sourceFile, buffer, 0, size, null);
 			} catch (e) {
 				reject(e);
 				close();
-				return -1;
 			}
 		}
+
 		decompressed.on('data', (chunk: Buffer) => {
+			if (!alive) return;
 			const buffer = Buffer.alloc(chunk.length);
 			const byteCount = readSource(buffer, chunk.length);
-			if (byteCount === -1) return;
+			if (!alive) return;
 			if (byteCount !== chunk.length || !buffer.equals(chunk)) {
 				resolve(false);
 				close();
 			}
 		});
 		decompressed.on('end', () => {
+			if (!alive) return;
 			const buffer = Buffer.alloc(1);
 			const byteCount = readSource(buffer, 1);
-			if (byteCount === -1) return;
+			if (!alive) return;
 			close();
 			resolve(byteCount === 0);
 		});
