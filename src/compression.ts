@@ -3,6 +3,8 @@ import zlib from 'node:zlib';
 import { FileFormatError } from './file';
 import { GzipChunkReader } from './gzipChunkReader';
 
+export const GZIP_FILE_EXTENSION = '.gz';
+
 export function compressBuffer(buffer: Buffer): Buffer {
 	return zlib.deflateSync(buffer);
 }

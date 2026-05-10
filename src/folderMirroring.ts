@@ -1,11 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import chalk from 'chalk';
-import { compareCompressedFile, compressFile } from './compression';
-import { FolderSyncStats } from './folderStats';
+import { compareCompressedFile, compressFile, GZIP_FILE_EXTENSION } from './compression';
 import { FileFormatError } from './file';
-
-const GZ_FILE_EXTENSION = '.gz';
+import { FolderSyncStats } from './folderStats';
 
 export class FolderMirroring {
 	private readonly stats = new FolderSyncStats();
@@ -59,6 +57,7 @@ export class FolderMirroring {
 	}
 
 	private async syncFile(sourceFilePath: string, destinationFilePath: string) {
+		destinationFilePath += GZIP_FILE_EXTENSION;
 		if (fs.existsSync(destinationFilePath) && fs.statSync(destinationFilePath).isDirectory()) {
 			fs.rmSync(destinationFilePath, { recursive: true });
 			console.log(chalk.red('-d ') + destinationFilePath);
@@ -68,14 +67,11 @@ export class FolderMirroring {
 			try {
 				equal = await compareCompressedFile(sourceFilePath, destinationFilePath);
 			} catch (e) {
-				if (e instanceof FileFormatError)
-					equal = false;
-				else
-					throw e;
+				if (e instanceof FileFormatError) equal = false;
+				else throw e;
 			}
 		}
-		if (!equal)
-			await compressFile(sourceFilePath, destinationFilePath);
+		if (!equal) await compressFile(sourceFilePath, destinationFilePath);
 	}
 
 	private syncFolderBackward(sourcePath: string, destinationPath: string) {}
