@@ -29,61 +29,59 @@ export async function compressFile(sourcePath: string, targetPath: string): Prom
 	});
 }
 
-export async function compareCompressedFile(sourcePath: string, targetPath: string): Promise<void> {
-	const source = fs.createReadStream(sourcePath);
+export async function compareCompressedFile(
+	sourcePath: string,
+	targetPath: string,
+): Promise<boolean> {
+	let sourceFile = fs.openSync(sourcePath, 'r');
 	const target = fs.createReadStream(targetPath);
 	const gunzip = zlib.createGunzip();
+	const decompressed = target.pipe(gunzip);
+
+	function close() {
+		if (sourceFile !== -1) {
+			fs.closeSync(sourceFile);
+			sourceFile = -1;
+		}
+		gunzip.destroy();
+		target.destroy();
+	}
+
 	return new Promise((resolve, reject) => {
-		const decompressed = target.pipe(gunzip);
-		let sourceEnded = false;
-		let decompressedEnded = false;
-		let sourceBuf = Buffer.alloc(0);
-		let decompressedBuf = Buffer.alloc(0);
-
-		function compare() {
-			const len = Math.min(sourceBuf.length, decompressedBuf.length);
-			if (len === 0) return;
-			if (!sourceBuf.subarray(0, len).equals(decompressedBuf.subarray(0, len))) {
-				reject(new FileFormatError('Compressed file does not match source: ' + targetPath));
-				return;
-			}
-			sourceBuf = sourceBuf.subarray(len);
-			decompressedBuf = decompressedBuf.subarray(len);
-			checkEnd();
-		}
-
-		function checkEnd() {
-			if (sourceEnded && decompressedEnded) {
-				if (sourceBuf.length !== 0 || decompressedBuf.length !== 0)
-					reject(new FileFormatError('Compressed file does not match source: ' + targetPath));
-				else resolve();
+		function readSource(buffer: Buffer, size: number): number {
+			try {
+				return fs.readSync(sourceFile, buffer, 0, size, null);
+			} catch (e) {
+				reject(e);
+				close();
+				return -1;
 			}
 		}
-
-		source.on('data', (chunk: Buffer | string) => {
-			if (typeof chunk === 'string')
-				throw new FileFormatError('Unexpected chunk type. Need: Buffer, got: string');
-			sourceBuf = Buffer.concat([sourceBuf, chunk]);
-			compare();
-		});
-		source.on('end', () => {
-			sourceEnded = true;
-			checkEnd();
-		});
-		source.on('error', reject);
-
 		decompressed.on('data', (chunk: Buffer) => {
-			decompressedBuf = Buffer.concat([decompressedBuf, chunk]);
-			compare();
+			const buffer = Buffer.alloc(chunk.length);
+			const byteCount = readSource(buffer, chunk.length);
+			if (byteCount === -1) return;
+			if (byteCount !== chunk.length || !buffer.equals(chunk)) {
+				resolve(false);
+				close();
+			}
 		});
 		decompressed.on('end', () => {
-			decompressedEnded = true;
-			checkEnd();
+			const buffer = Buffer.alloc(1);
+			const byteCount = readSource(buffer, 1);
+			if (byteCount === -1) return;
+			close();
+			resolve(byteCount === 0);
 		});
 		decompressed.on('error', (e) => {
+			close();
 			if ((e as AnyError).code === 'Z_DATA_ERROR')
 				reject(new FileFormatError('Compression format error in: ' + targetPath));
 			else reject(e);
+		});
+		target.on('error', (e) => {
+			close();
+			reject(e);
 		});
 	});
 }
