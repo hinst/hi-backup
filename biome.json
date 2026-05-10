@@ -12,6 +12,9 @@
 			},
 			"nursery": {
 				"noFloatingPromises": "error"
+			},
+			"complexity": {
+				"useArrowFunction": "off"
 			}
 		}
 	},
