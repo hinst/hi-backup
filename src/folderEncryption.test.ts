@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import test from 'node:test';
 import { compareSync } from 'dir-compare';
-import { FolderEncryption, FolderEncryptionStats } from './folderEncryption';
+import { FolderEncryption } from './folderEncryption';
+import { FolderSyncStats } from './folderStats';
 
 test(FolderEncryption.prototype.sync.name, function () {
 	if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
@@ -10,7 +11,7 @@ test(FolderEncryption.prototype.sync.name, function () {
 
 	let folderEncryption = new FolderEncryption('password', './test', './test.1');
 	folderEncryption.sync();
-	const expectedStats = Object.assign(new FolderEncryptionStats(), {
+	const expectedStats = Object.assign(new FolderSyncStats(), {
 		sourceFolders: 1,
 		newFolders: 2,
 		deletedFolders: 0,

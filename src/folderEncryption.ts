@@ -3,16 +3,14 @@ import path from 'node:path';
 import chalk from 'chalk';
 import { Encryption } from './encryption';
 import { FileFormatError, readSizedBuffer, writeSizedBuffer } from './file';
+import { FolderSyncStats } from './folderStats';
 
 const MAX_FILE_NAME_LENGTH = 32;
 const INFO_FILE_EXTENSION = '.info';
 
 export class FolderEncryption {
+	public readonly stats = new FolderSyncStats();
 	private readonly encryption: Encryption;
-	private _stats = new FolderEncryptionStats();
-	public get stats(): FolderEncryptionStats {
-		return this._stats;
-	}
 
 	constructor(
 		private readonly password: string,
@@ -24,12 +22,10 @@ export class FolderEncryption {
 	}
 
 	sync() {
-		this._stats = new FolderEncryptionStats();
 		this.syncFolder(this.sourcePath, this.destinationPath);
 	}
 
 	unpack() {
-		this._stats = new FolderEncryptionStats();
 		this.unpackFolder(this.sourcePath, this.destinationPath);
 	}
 
@@ -85,11 +81,11 @@ export class FolderEncryption {
 					this.encryption.decryptFileName(destinationPath),
 			);
 			fs.unlinkSync(destinationPath);
-			this._stats.deletedFiles++;
+			this.stats.deletedFiles++;
 		}
 		if (!fs.existsSync(destinationPath)) {
 			console.log(chalk.green('+d ') + destinationPath);
-			this._stats.newFolders++;
+			this.stats.newFolders++;
 		}
 		fs.mkdirSync(destinationPath, { recursive: true });
 		const encryptedFileNames = new Set<string>();
@@ -113,12 +109,12 @@ export class FolderEncryption {
 			const fileInfo = fs.statSync(sourceFilePath);
 			if (fileInfo.isFile()) {
 				this.syncFile(sourceFilePath, destinationFilePath);
-				this._stats.sourceFiles++;
+				this.stats.sourceFiles++;
 			}
 			if (fileInfo.isDirectory()) {
 				this.saveFolderName(destinationFilePath + INFO_FILE_EXTENSION, fileName);
 				this.syncFolder(sourceFilePath, destinationFilePath);
-				this._stats.sourceFolders++;
+				this.stats.sourceFolders++;
 			}
 		}
 	}
@@ -154,11 +150,11 @@ export class FolderEncryption {
 							this.encryption.decryptFileName(destinationFilePath),
 					);
 					fs.unlinkSync(destinationFilePath);
-					this._stats.deletedFiles++;
+					this.stats.deletedFiles++;
 				} else if (fileInfo.isDirectory()) {
 					const folderName = this.deleteEncryptedFolder(destinationFilePath);
 					console.log(chalk.red('-d ') + destinationFilePath + '\n\t' + folderName);
-					this._stats.deletedFolders++;
+					this.stats.deletedFolders++;
 				}
 			}
 		}
@@ -181,7 +177,7 @@ export class FolderEncryption {
 		if (fs.existsSync(destinationPath) && fs.statSync(destinationPath).isDirectory()) {
 			const folderName = this.deleteEncryptedFolder(destinationPath);
 			console.log(chalk.red('-d ') + destinationPath + '\n\t' + folderName);
-			this._stats.deletedFolders++;
+			this.stats.deletedFolders++;
 		}
 		if (fs.existsSync(destinationPath)) {
 			try {
@@ -200,22 +196,12 @@ export class FolderEncryption {
 						destinationPath,
 				);
 				this.encryption.encryptFile(sourcePath, destinationPath);
-				this._stats.updatedFiles++;
+				this.stats.updatedFiles++;
 			}
 		} else {
 			console.log(chalk.greenBright('+f ') + sourcePath + ' -> ' + destinationPath);
 			this.encryption.encryptFile(sourcePath, destinationPath);
-			this._stats.newFiles++;
+			this.stats.newFiles++;
 		}
 	}
-}
-
-export class FolderEncryptionStats {
-	public sourceFolders = 0;
-	public newFolders = 0;
-	public deletedFolders = 0;
-	public sourceFiles = 0;
-	public newFiles = 0;
-	public updatedFiles = 0;
-	public deletedFiles = 0;
 }
