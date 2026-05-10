@@ -29,61 +29,62 @@ export async function compressFile(sourcePath: string, targetPath: string): Prom
 	});
 }
 
-export async function compareCompressedFile(
-	sourcePath: string,
-	targetPath: string,
-): Promise<boolean> {
-	const sourceFile = fs.openSync(sourcePath, 'r');
-	const target = fs.createReadStream(targetPath);
-	const gunzip = zlib.createGunzip();
-	const decompressed = target.pipe(gunzip);
-	let alive = true;
+class GzipChunkReader {
+	constructor(readonly sourcePath: string) {}
 
-	function close() {
-		if (!alive) return;
-		fs.closeSync(sourceFile);
-		gunzip.destroy();
-		target.destroy();
-		alive = false;
-	}
+	async read(receiver: (chunk: Buffer) => void): Promise<void> {
+		const source = fs.createReadStream(this.sourcePath);
+		const gunzip = zlib.createGunzip();
+		const decompressed = source.pipe(gunzip);
 
-	return new Promise((resolve, reject) => {
-		function readSource(buffer: Buffer, size: number) {
-			try {
-				return fs.readSync(sourceFile, buffer, 0, size, null);
-			} catch (e) {
-				reject(e);
-				close();
-			}
+		let isClosed = false;
+		/** @returns true if closed */
+		function close(): boolean {
+			if (isClosed) return false;
+			gunzip.destroy();
+			source.destroy();
+			isClosed = true;
+			return true;
 		}
 
-		decompressed.on('data', (chunk: Buffer) => {
-			if (!alive) return;
-			const buffer = Buffer.alloc(chunk.length);
-			const byteCount = readSource(buffer, chunk.length);
-			if (!alive) return;
-			if (byteCount !== chunk.length || !buffer.equals(chunk)) {
-				resolve(false);
-				close();
-			}
+		return new Promise((resolve, reject) => {
+			decompressed.on('data', (chunk: Buffer) => {
+				try {
+					receiver(chunk);
+				} catch (e) {
+					if (close()) reject(e);
+				}
+			});
+			decompressed.on('end', () => {
+				if (close()) resolve();
+			});
+			decompressed.on('error', (e) => {
+				if (close()) reject(e);
+			});
+			source.on('error', (e) => {
+				if (close()) reject(e);
+			});
 		});
-		decompressed.on('end', () => {
-			if (!alive) return;
-			const buffer = Buffer.alloc(1);
-			const byteCount = readSource(buffer, 1);
-			if (!alive) return;
-			close();
-			resolve(byteCount === 0);
+	}
+}
+
+export async function compareCompressedFile(
+	sourcePath: string,
+	compressedPath: string,
+): Promise<boolean> {
+	const reader = new GzipChunkReader(compressedPath);
+	const sourceFile = fs.openSync(sourcePath, 'r');
+	let equal = true;
+	try {
+		await reader.read(unpackedChunk => {
+			const sourceChunk = Buffer.alloc(unpackedChunk.length);
+			fs.readSync(sourceFile, sourceChunk, 0, sourceChunk.length, null);
+			if (!sourceChunk.equals(unpackedChunk))
+				equal = false;
 		});
-		decompressed.on('error', (e) => {
-			close();
-			if ((e as AnyError).code === 'Z_DATA_ERROR')
-				reject(new FileFormatError('Compression format error in: ' + targetPath));
-			else reject(e);
-		});
-		target.on('error', (e) => {
-			close();
-			reject(e);
-		});
-	});
+		equal = equal && 0 === fs.readSync(sourceFile, Buffer.alloc(1), 0, 1, null);
+	} finally {
+		fs.closeSync(sourceFile);
+	}
+	return equal;
 }
