@@ -20,7 +20,8 @@ function readInt32FromFile(file: number): number {
 }
 
 export function writeSizedBuffer(file: number, data: Buffer) {
-	if (data.length > MAX_BUFFER_SIZE) throw new FileFormatError('Chunk is too large: ' + data.length);
+	if (data.length > MAX_BUFFER_SIZE)
+		throw new FileFormatError('Chunk is too large: ' + data.length);
 	writeInt32ToFile(file, data.length);
 	fs.writeSync(file, data, 0, data.length, null);
 }
@@ -77,8 +78,9 @@ export function compressBuffer(buffer: Buffer): Buffer {
 export function inflateBuffer(buffer: Buffer): Buffer {
 	try {
 		return zlib.inflateSync(buffer);
-	} catch (e: any) {
-		if (e.code === 'Z_DATA_ERROR') throw new FileFormatError('Compression format error');
+	} catch (e) {
+		if ((e as AnyError).code === 'Z_DATA_ERROR')
+			throw new FileFormatError('Compression format error');
 		else throw e;
 	}
 }

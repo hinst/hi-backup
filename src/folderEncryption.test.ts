@@ -1,6 +1,6 @@
-import test from 'node:test';
-import fs from 'fs';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import test from 'node:test';
 import { compareSync } from 'dir-compare';
 import { FolderEncryption, FolderEncryptionStats } from './folderEncryption';
 
@@ -17,7 +17,7 @@ test(FolderEncryption.prototype.sync.name, function () {
 		sourceFiles: 4,
 		newFiles: 4,
 		updatedFiles: 0,
-		deletedFiles: 0
+		deletedFiles: 0,
 	});
 	assert.deepEqual(folderEncryption.stats, expectedStats);
 	expectedStats.newFolders = 0;
@@ -40,7 +40,7 @@ test(FolderEncryption.prototype.sync.name + '.addAndDelete', function () {
 	if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
 	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
 
-	let folderEncryption = new FolderEncryption('password', './test', './test.1');
+	const folderEncryption = new FolderEncryption('password', './test', './test.1');
 	folderEncryption.sync();
 
 	fs.writeFileSync('./test/new.txt', 'test');
@@ -71,7 +71,7 @@ test(FolderEncryption.prototype.sync.name + '.wrongPassword', function () {
 	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
 
 	new FolderEncryption('password', './test', './test.1').sync();
-	let error: any;
+	let error: AnyError;
 	try {
 		new FolderEncryption('password1', './test.1', './test.0').unpack();
 	} catch (e) {
