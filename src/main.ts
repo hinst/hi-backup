@@ -20,6 +20,7 @@ async function main() {
 			case TaskCommand.MIRROR: {
 				const mirroring = new FolderMirroring(task.sourcePath, task.targetPath);
 				await mirroring.sync();
+				console.log(mirroring.stats);
 				break;
 			}
 		}
