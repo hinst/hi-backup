@@ -1,14 +1,11 @@
-import fs from 'fs';
-import zlib from 'zlib';
+import fs from 'node:fs';
+import zlib from 'node:zlib';
 import { INT32_SIZE, int32ToBuffer } from './array';
 
 const MAX_CHUNK_SIZE = 100 * 1024 * 1024;
 const MAX_BUFFER_SIZE = 1024 * 1024;
 
 export class FileFormatError extends Error {
-	constructor(message: string) {
-		super(message);
-	}
 }
 
 function writeInt32ToFile(file: number, value: number): void {
@@ -34,20 +31,16 @@ export function writeBufferToFile(file: number, buffer: Buffer): void {
 export function readBufferFromFile(file: number): Buffer {
 	const length = readInt32FromFile(file);
 	if (length < 0) throw new FileFormatError('Negative buffer length: ' + length);
-	if (length > MAX_BUFFER_SIZE)
-		throw new FileFormatError('Buffer length is too large: ' + length);
+	if (length > MAX_BUFFER_SIZE) throw new FileFormatError('Buffer length is too large: ' + length);
 	const buffer = Buffer.alloc(length);
 	const bytesRead = fs.readSync(file, buffer, 0, length, null);
 	if (bytesRead !== length)
-		throw new FileFormatError(
-			'File format error: expected ' + length + ' bytes, got ' + bytesRead
-		);
+		throw new FileFormatError('File format error: expected ' + length + ' bytes, got ' + bytesRead);
 	return buffer;
 }
 
 export function writePreSizedChunk(file: number, data: Buffer) {
-	if (data.length > MAX_CHUNK_SIZE)
-		throw new FileFormatError('Chunk is too large: ' + data.length);
+	if (data.length > MAX_CHUNK_SIZE) throw new FileFormatError('Chunk is too large: ' + data.length);
 	writeInt32ToFile(file, data.length);
 	fs.writeSync(file, data, 0, data.length, null);
 }
@@ -61,7 +54,7 @@ export function readPreSizedChunk(file: number): Buffer {
 	const chunkSizeActual = fs.readSync(file, buffer, 0, chunkSize, null);
 	if (chunkSizeActual !== chunkSize)
 		throw new FileFormatError(
-			'File format error: expected ' + chunkSize + ' bytes, got ' + chunkSizeActual
+			'File format error: expected ' + chunkSize + ' bytes, got ' + chunkSizeActual,
 		);
 	return buffer.subarray(0, chunkSize);
 }
@@ -105,8 +98,7 @@ export function inflateBuffer(buffer: Buffer): Buffer {
 	try {
 		return zlib.inflateSync(buffer);
 	} catch (e: any) {
-		if (e.code === 'Z_DATA_ERROR')
-			throw new FileFormatError('Compression format error');
+		if (e.code === 'Z_DATA_ERROR') throw new FileFormatError('Compression format error');
 		else throw e;
 	}
 }
