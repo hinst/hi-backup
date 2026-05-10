@@ -5,10 +5,8 @@ import {
 	compressBuffer,
 	FileFormatError,
 	inflateBuffer,
-	readBufferFromFile,
-	readPreSizedChunk,
-	writeBufferToFile,
-	writePreSizedChunk,
+	readSizedBuffer,
+	writeSizedBuffer,
 } from './file';
 
 const CHUNK_SIZE = 1024 * 1024;
@@ -63,15 +61,15 @@ export class Encryption {
 		const noise = Encryption.createNoise();
 		fs.writeSync(outputFile, noise, 0, noise.length, null);
 		const fileName = path.basename(sourceFilePath);
-		writeBufferToFile(outputFile, this.encryptText(noise, fileName));
+		writeSizedBuffer(outputFile, this.encryptText(noise, fileName));
 		while (true) {
 			const byteCount = fs.readSync(sourceFile, buffer, 0, CHUNK_SIZE, null);
 			if (!byteCount) break;
 			const bytes = buffer.subarray(0, byteCount);
 			const encryptedBytes = this.encrypt(noise, bytes);
-			writePreSizedChunk(outputFile, encryptedBytes);
+			writeSizedBuffer(outputFile, encryptedBytes);
 		}
-		writePreSizedChunk(outputFile, Buffer.alloc(0));
+		writeSizedBuffer(outputFile, Buffer.alloc(0));
 		fs.closeSync(sourceFile);
 		fs.closeSync(outputFile);
 	}
@@ -79,11 +77,11 @@ export class Encryption {
 	decryptFile(sourceFilePath: string, destinationFolderPath: string) {
 		const sourceFile = fs.openSync(sourceFilePath, 'r');
 		const noise = Encryption.readNoise(sourceFile);
-		const fileName = this.decryptText(noise, readBufferFromFile(sourceFile));
+		const fileName = this.decryptText(noise, readSizedBuffer(sourceFile));
 		const destinationFilePath = path.join(destinationFolderPath, fileName);
 		const destinationFile = fs.openSync(destinationFilePath, 'w');
 		while (true) {
-			const encryptedBytes = readPreSizedChunk(sourceFile);
+			const encryptedBytes = readSizedBuffer(sourceFile);
 			if (!encryptedBytes.length) break;
 			const decryptedBytes = this.decrypt(noise, encryptedBytes);
 			fs.writeSync(destinationFile, decryptedBytes, 0, decryptedBytes.length, null);
@@ -95,7 +93,7 @@ export class Encryption {
 	decryptFileName(sourceFilePath: string): string {
 		const sourceFile = fs.openSync(sourceFilePath, 'r');
 		const noise = Encryption.readNoise(sourceFile);
-		const fileName = this.decryptText(noise, readBufferFromFile(sourceFile));
+		const fileName = this.decryptText(noise, readSizedBuffer(sourceFile));
 		fs.closeSync(sourceFile);
 		return fileName;
 	}
@@ -114,17 +112,17 @@ export class Encryption {
 		const destinationFile = fs.openSync(destinationFilePath, 'r');
 		const sourceBuffer = Buffer.alloc(CHUNK_SIZE);
 		const noise = Encryption.readNoise(destinationFile);
-		this.decrypt(noise, readBufferFromFile(destinationFile));
+		this.decrypt(noise, readSizedBuffer(destinationFile));
 		let isConsistent = true;
 		while (isConsistent) {
 			const sourceSize = fs.readSync(sourceFile, sourceBuffer, 0, CHUNK_SIZE, null);
 			if (!sourceSize) {
-				const lastBuffer = readBufferFromFile(destinationFile);
+				const lastBuffer = readSizedBuffer(destinationFile);
 				if (lastBuffer.length !== 0) isConsistent = false;
 				break;
 			}
 			const sourceBytes = sourceBuffer.subarray(0, sourceSize);
-			const encryptedBytes = readPreSizedChunk(destinationFile);
+			const encryptedBytes = readSizedBuffer(destinationFile);
 			const decryptedBytes = this.decrypt(noise, encryptedBytes);
 			if (sourceBytes.length !== decryptedBytes.length) {
 				isConsistent = false;

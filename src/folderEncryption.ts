@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import chalk from 'chalk';
 import { Encryption } from './encryption';
-import { FileFormatError, readBufferFromFile, writeBufferToFile } from './file';
+import { FileFormatError, readSizedBuffer, writeSizedBuffer } from './file';
 
 const MAX_FILE_NAME_LENGTH = 32;
 const INFO_FILE_EXTENSION = '.info';
@@ -127,13 +127,13 @@ export class FolderEncryption {
 		const file = fs.openSync(destinationFilePath, 'w');
 		const noise = Encryption.createNoise();
 		fs.writeSync(file, noise, 0, noise.length, null);
-		writeBufferToFile(file, this.encryption.encryptText(noise, fileName));
+		writeSizedBuffer(file, this.encryption.encryptText(noise, fileName));
 	}
 
 	private loadFolderName(destinationFilePath: string): string {
 		const file = fs.openSync(destinationFilePath, 'r');
 		const noise = Encryption.readNoise(file);
-		const buffer = readBufferFromFile(file);
+		const buffer = readSizedBuffer(file);
 		const fileName = this.encryption.decryptText(noise, buffer);
 		fs.closeSync(file);
 		return fileName;
