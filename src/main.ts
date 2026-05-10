@@ -13,17 +13,19 @@ async function main() {
 	const tasks: TaskConfig[] = JSON.parse(fs.readFileSync(configFilePath).toString());
 	if (!tasks?.length) console.warn('There are no tasks');
 	for (const taskData of tasks) {
-		const task = Object.assign(TaskConfig.createEmpty(), taskData);
-		task.validate();
-		console.log(task);
-		switch (task.command) {
+		const taskConfig = Object.assign(TaskConfig.createEmpty(), taskData);
+		console.time(taskConfig.toString());
+		taskConfig.validate();
+		console.log(taskConfig);
+		switch (taskConfig.command) {
 			case TaskCommand.MIRROR: {
-				const mirroring = new FolderMirroring(task.sourcePath, task.targetPath);
+				const mirroring = new FolderMirroring(taskConfig.sourcePath, taskConfig.targetPath);
 				await mirroring.sync();
 				console.log(mirroring.stats);
 				break;
 			}
 		}
+		console.timeEnd(taskConfig.toString());
 	}
 }
 

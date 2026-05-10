@@ -19,7 +19,7 @@ export function unpackBuffer(buffer: Buffer): Buffer {
 	}
 }
 
-export async function compressFile(sourcePath: string, targetPath: string): Promise<void> {
+export async function compressFileGzip(sourcePath: string, targetPath: string): Promise<void> {
 	const gzip = zlib.createGzip();
 	const input = fs.createReadStream(sourcePath);
 	const output = fs.createWriteStream(targetPath);

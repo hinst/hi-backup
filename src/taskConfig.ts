@@ -19,6 +19,10 @@ export class TaskConfig {
 		//@ts-ignore
 		return new TaskConfig();
 	}
+
+	toString() {
+		return this.sourcePath + ' ' + this.command + ' ' + this.targetPath;
+	}
 }
 
 export class TaskConfigError extends Error {}
