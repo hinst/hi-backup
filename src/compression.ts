@@ -20,17 +20,14 @@ export async function compressFile(sourcePath: string, targetPath: string): Prom
 	const gzip = zlib.createGzip();
 	const input = fs.createReadStream(sourcePath);
 	const output = fs.createWriteStream(targetPath);
-
 	return new Promise((resolve, reject) => {
 		input.pipe(gzip).pipe(output);
-
-		output.on('finish', () => {
-			console.log('Compression complete.');
-			resolve();
-		});
-
+		output.on('finish', () => resolve());
 		output.on('error', reject);
 		input.on('error', reject);
 		gzip.on('error', reject);
 	});
+}
+
+export async function compareCompressedFile(sourcePath: string, targetPath: string): Promise<void> {
 }
