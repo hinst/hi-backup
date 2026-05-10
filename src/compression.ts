@@ -7,7 +7,7 @@ export function compressBuffer(buffer: Buffer): Buffer {
 	return zlib.deflateSync(buffer);
 }
 
-export function inflateBuffer(buffer: Buffer): Buffer {
+export function unpackBuffer(buffer: Buffer): Buffer {
 	try {
 		return zlib.inflateSync(buffer);
 	} catch (e) {
@@ -38,11 +38,10 @@ export async function compareCompressedFile(
 	const sourceFile = fs.openSync(sourcePath, 'r');
 	let equal = true;
 	try {
-		await reader.read(unpackedChunk => {
+		await reader.read((unpackedChunk) => {
 			const sourceChunk = Buffer.alloc(unpackedChunk.length);
 			fs.readSync(sourceFile, sourceChunk, 0, sourceChunk.length, null);
-			if (!sourceChunk.equals(unpackedChunk))
-				equal = false;
+			if (!sourceChunk.equals(unpackedChunk)) equal = false;
 		});
 		equal = equal && 0 === fs.readSync(sourceFile, Buffer.alloc(1), 0, 1, null);
 	} catch (e) {

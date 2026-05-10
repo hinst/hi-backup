@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import { compressBuffer, inflateBuffer } from './compression';
+import { compressBuffer, unpackBuffer } from './compression';
 import { FileFormatError, readSizedBuffer, writeSizedBuffer } from './file';
 
 const CHUNK_SIZE = 1024 * 1024;
@@ -45,7 +45,7 @@ export class Encryption {
 		const buffer1 = decipher.update(data);
 		const buffer2 = decipher.final();
 		const output = Buffer.concat([buffer1, buffer2]);
-		const inflatedOutput = inflateBuffer(output);
+		const inflatedOutput = unpackBuffer(output);
 		return inflatedOutput;
 	}
 
