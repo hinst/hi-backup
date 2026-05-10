@@ -1,6 +1,6 @@
+import assert from 'node:assert';
+import fs from 'node:fs';
 import test from 'node:test';
-import assert from 'assert';
-import fs from 'fs';
 import { Encryption } from './encryption';
 import { changeRandomByte, FileFormatError } from './file';
 
@@ -13,7 +13,7 @@ test(Encryption.prototype.encrypt.name, function () {
 	assert.notEqual(new TextDecoder().decode(outputData), inputText);
 	assert.equal(
 		new TextDecoder().decode(new Encryption(password).decrypt(noise, outputData)),
-		inputText
+		inputText,
 	);
 });
 

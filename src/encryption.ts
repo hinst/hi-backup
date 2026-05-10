@@ -1,15 +1,15 @@
-import crypto from 'crypto';
-import fs from 'fs';
+import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
 import {
-	FileFormatError,
-	readPreSizedChunk,
-	readBufferFromFile,
-	writePreSizedChunk,
-	writeBufferToFile,
 	compressBuffer,
-	inflateBuffer
+	FileFormatError,
+	inflateBuffer,
+	readBufferFromFile,
+	readPreSizedChunk,
+	writeBufferToFile,
+	writePreSizedChunk,
 } from './file';
-import path from 'path';
 
 const CHUNK_SIZE = 1024 * 1024;
 const ENCRYPTION_ALGORITHM = 'aes-256-cbc';
@@ -17,7 +17,7 @@ const HASHING_ALGORITHM = 'sha256';
 const NOISE_SIZE = 16;
 
 export class Encryption {
-	constructor(private readonly password: string) { }
+	constructor(private readonly password: string) {}
 
 	private _key?: Buffer;
 
@@ -104,9 +104,7 @@ export class Encryption {
 		const buffer = Buffer.alloc(NOISE_SIZE);
 		const bytesRead = fs.readSync(file, buffer, 0, NOISE_SIZE, null);
 		if (bytesRead !== NOISE_SIZE) {
-			throw new FileFormatError(
-				'File format error: expected ' + NOISE_SIZE + ' bytes for noise'
-			);
+			throw new FileFormatError('File format error: expected ' + NOISE_SIZE + ' bytes for noise');
 		}
 		return buffer.subarray(0, NOISE_SIZE);
 	}
