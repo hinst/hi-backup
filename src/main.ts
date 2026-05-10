@@ -1,5 +1,5 @@
 import 'source-map-support/register';
-import process from 'process';
+import process from 'node:process';
 import { FolderEncryption } from './folderEncryption';
 
 function requireEnvironmentString(key: string): string {
@@ -11,15 +11,15 @@ function requireEnvironmentString(key: string): string {
 const sourceFolder = requireEnvironmentString('source');
 const destinationFolder = requireEnvironmentString('destination');
 const password = requireEnvironmentString('password');
-const unpack = process.env['unpack'] === 'true';
-const ignoredList = JSON.parse(process.env['ignoredList'] || '[]');
+const unpack = process.env.unpack === 'true';
+const ignoredList = JSON.parse(process.env.ignoredList || '[]');
 
 console.log((unpack ? 'Unpacking ' : 'Encrypting ') + sourceFolder + ' -> ' + destinationFolder);
 const folderEncryption = new FolderEncryption(
 	password,
 	sourceFolder,
 	destinationFolder,
-	ignoredList
+	ignoredList,
 );
 console.time('done');
 if (unpack) folderEncryption.unpack();
