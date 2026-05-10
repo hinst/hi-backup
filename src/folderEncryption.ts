@@ -1,14 +1,14 @@
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
+import chalk from 'chalk';
 import { Encryption } from './encryption';
 import { FileFormatError, readBufferFromFile, writeBufferToFile } from './file';
-import chalk from 'chalk';
 
 const MAX_FILE_NAME_LENGTH = 32;
 const INFO_FILE_EXTENSION = '.info';
 
 export class FolderEncryption {
-	private readonly encryption: Encryption = new Encryption(this.password);
+	private readonly encryption: Encryption;
 	private _stats = new FolderEncryptionStats();
 	public get stats(): FolderEncryptionStats {
 		return this._stats;
@@ -18,8 +18,10 @@ export class FolderEncryption {
 		private readonly password: string,
 		private readonly sourcePath: string,
 		private readonly destinationPath: string,
-		private readonly ignoredList: string[] = []
-	) {}
+		private readonly ignoredList: string[] = [],
+	) {
+		this.encryption = new Encryption(this.password);
+	}
 
 	sync() {
 		this._stats = new FolderEncryptionStats();
@@ -33,7 +35,7 @@ export class FolderEncryption {
 
 	private checkIgnored(fileName: string): boolean {
 		return this.ignoredList.some(
-			(ignoredFile) => ignoredFile.toLowerCase().trim() === fileName.toLowerCase().trim()
+			(ignoredFile) => ignoredFile.toLowerCase().trim() === fileName.toLowerCase().trim(),
 		);
 	}
 
@@ -59,7 +61,7 @@ export class FolderEncryption {
 	private createShortEncryptedName(fileName: string): string {
 		const encryptedFileName = this.encryption.encryptText(
 			Encryption.createDefaultNoise(),
-			fileName
+			fileName,
 		);
 		const shortEncryptedName = Encryption.createHash()
 			.update(encryptedFileName)
@@ -80,7 +82,7 @@ export class FolderEncryption {
 				chalk.redBright('-f ') +
 					destinationPath +
 					'\n\t' +
-					this.encryption.decryptFileName(destinationPath)
+					this.encryption.decryptFileName(destinationPath),
 			);
 			fs.unlinkSync(destinationPath);
 			this._stats.deletedFiles++;
@@ -98,7 +100,7 @@ export class FolderEncryption {
 	private syncFolderForward(
 		sourcePath: string,
 		encryptedFileNames: Set<string>,
-		destinationPath: string
+		destinationPath: string,
 	) {
 		const sourceFiles = fs.readdirSync(sourcePath);
 		for (const fileName of sourceFiles) {
@@ -149,7 +151,7 @@ export class FolderEncryption {
 						chalk.redBright('-f ') +
 							destinationFilePath +
 							'\n\t' +
-							this.encryption.decryptFileName(destinationFilePath)
+							this.encryption.decryptFileName(destinationFilePath),
 					);
 					fs.unlinkSync(destinationFilePath);
 					this._stats.deletedFiles++;
@@ -195,7 +197,7 @@ export class FolderEncryption {
 					(isDamaged ? chalk.yellow('xf ') : chalk.blue('~f ')) +
 						sourcePath +
 						' -> ' +
-						destinationPath
+						destinationPath,
 				);
 				this.encryption.encryptFile(sourcePath, destinationPath);
 				this._stats.updatedFiles++;
