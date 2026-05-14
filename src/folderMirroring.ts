@@ -92,12 +92,10 @@ export class FolderMirroring {
 			let sourceFilePath = sourcePath + '/' + targetFile.name;
 			if (targetFile.isFile())
 				if (targetFile.name.endsWith(GZIP_FILE_EXTENSION)) {
-					console.log('a', sourceFilePath, targetFilePath);
 					sourceFilePath = sourceFilePath.substring(
 						0,
 						sourceFilePath.length - GZIP_FILE_EXTENSION.length,
 					);
-					console.log('b', sourceFilePath, targetFilePath);
 					if (!fs.existsSync(sourceFilePath) || !fs.statSync(sourceFilePath).isFile())
 						this.deleteFile(targetFilePath);
 				} else this.deleteFile(targetFilePath);
