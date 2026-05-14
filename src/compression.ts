@@ -3,6 +3,8 @@ import zlib from 'node:zlib';
 import { FileFormatError } from './file';
 import { GzipChunkReader } from './gzipChunkReader';
 
+const ZLIB_FORMAT_ERRORS = [zlib.constants.Z_DATA_ERROR, zlib.constants.Z_BUF_ERROR];
+
 export const GZIP_FILE_EXTENSION = '.gz';
 
 export function compressBuffer(buffer: Buffer): Buffer {
@@ -47,7 +49,7 @@ export async function compareCompressedFile(
 		});
 		equal = equal && 0 === fs.readSync(sourceFile, Buffer.alloc(1), 0, 1, null);
 	} catch (e) {
-		if ((e as AnyError).code === 'Z_DATA_ERROR')
+		if (ZLIB_FORMAT_ERRORS.includes((e as GzipError).errno))
 			throw new FileFormatError('Compression format error');
 		else throw e;
 	} finally {
