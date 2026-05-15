@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import chalk from 'chalk';
-import { FileKind, joinFilePath, readFileHash } from './file';
+import { FileKind, joinFilePath } from './file';
 import { FileTransformer } from './fileTransformer';
 import { FolderHasher } from './folderHasher';
 import { FolderSyncStats } from './folderStats';
