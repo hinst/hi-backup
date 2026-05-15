@@ -1,5 +1,5 @@
 import type fs from 'node:fs';
-import { FileKind } from './file';
+import { FileKind, normalizeFilePath } from './file';
 
 export class FolderSyncItem {
 	constructor(
@@ -9,8 +9,7 @@ export class FolderSyncItem {
 	) {}
 
 	public static create(depth: number, entry: fs.Dirent<string>) {
-		let sourcePath = entry.parentPath + '/' + entry.name;
-		sourcePath = sourcePath.replaceAll('\\', '/');
+		const sourcePath = normalizeFilePath(entry.parentPath + '/' + entry.name);
 		const fileKind = entry.isFile()
 			? FileKind.FILE
 			: entry.isDirectory()

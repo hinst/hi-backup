@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import chalk from 'chalk';
-import { FileKind } from './file';
+import { FileKind, normalizeFilePath } from './file';
 import { FileTransformer } from './fileTransformer';
 import { FolderSyncStats } from './folderStats';
 import { FolderSyncItem } from './folderSyncItem';
@@ -8,6 +8,7 @@ import { FolderSyncItem } from './folderSyncItem';
 export class FolderSync {
 	public readonly stats = new FolderSyncStats();
 	private fileTransformer: FileTransformer = new FileTransformer();
+	private readonly targetPaths: Set<string> = new Set();
 
 	constructor(
 		private readonly sourcePath: string,
@@ -25,6 +26,7 @@ export class FolderSync {
 		fs.mkdirSync(this.targetPath, { recursive: true });
 		await this.syncItem(new FolderSyncItem(0, this.sourcePath, FileKind.DIRECTORY));
 		for (const syncItem of syncItems) await this.syncItem(syncItem);
+		this.syncBackwards(this.targetPath);
 	}
 
 	private readSyncItems(depth: number, sourcePath: string): FolderSyncItem[] {
@@ -63,6 +65,7 @@ export class FolderSync {
 		const sourceRelativePath = sourcePath.substring(this.sourcePath.length);
 		const targetRelativePath = this.fileTransformer.encodePath(sourceRelativePath, syncItem.kind);
 		const targetPath = this.targetPath + targetRelativePath;
+		this.targetPaths.add(targetPath);
 		switch (syncItem.kind) {
 			case FileKind.DIRECTORY: {
 				if (fs.existsSync(targetPath) && fs.statSync(targetPath).isFile())
@@ -72,7 +75,7 @@ export class FolderSync {
 			}
 			case FileKind.FILE: {
 				if (fs.existsSync(targetPath) && fs.statSync(targetPath).isDirectory())
-					this.deleteDirectory(targetPath);
+					this.deleteDirectory(sourcePath, targetPath);
 				await this.syncFile(syncItem.path, targetPath);
 				break;
 			}
@@ -99,14 +102,29 @@ export class FolderSync {
 			throw new Error('Source path does not exist: ' + syncItem.path);
 	}
 
+	private syncBackwards(targetPath: string) {
+		const stats = fs.statSync(targetPath);
+		if (stats.isDirectory()) {
+			const entries = fs.readdirSync(targetPath, { withFileTypes: true });
+			for (const entry of entries) {
+				const itemPath = normalizeFilePath(targetPath + '/' + entry.name);
+				this.syncBackwards(itemPath);
+			}
+		}
+		if (!this.targetPaths.has(targetPath)) {
+			if (stats.isDirectory()) this.deleteDirectory('', targetPath);
+			if (stats.isFile()) this.deleteFile('', targetPath);
+		}
+	}
+
 	private deleteFile(sourceFilePath: string, targetFilePath: string) {
 		console.log(chalk.red('-f') + ' ' + sourceFilePath + ' -> ' + targetFilePath);
 		fs.unlinkSync(targetFilePath);
 		this.stats.deletedFiles++;
 	}
 
-	private deleteDirectory(targetPath: string) {
-		console.log(chalk.red('-d ') + targetPath);
+	private deleteDirectory(sourcePath: string, targetPath: string) {
+		console.log(chalk.red('-d') + ' ' + sourcePath + ' -> ' + targetPath);
 		fs.rmSync(targetPath, { recursive: true });
 		this.stats.deletedFolders++;
 	}

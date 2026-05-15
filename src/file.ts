@@ -74,3 +74,7 @@ export function readNextByte(file: number): number | undefined {
 	if (bytesRead !== 1) return undefined;
 	return buffer.readUInt8(0);
 }
+
+export function normalizeFilePath(path: string): string {
+	return path.replaceAll('\\', '/');
+}
