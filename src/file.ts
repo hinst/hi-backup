@@ -3,6 +3,7 @@ import path from 'node:path';
 import { INT32_SIZE, int32ToBuffer } from './array';
 
 const MAX_BUFFER_SIZE = 100 * 1024 * 1024;
+const FILE_COMPARE_CHUNK_SIZE = 1024 * 1024;
 
 export class FileFormatError extends Error {}
 
@@ -74,6 +75,40 @@ export function readNextByte(file: number): number | undefined {
 	const bytesRead = fs.readSync(file, buffer, 0, 1, null);
 	if (bytesRead !== 1) return undefined;
 	return buffer.readUInt8(0);
+}
+
+export function compareFiles(firstFilePath: string, secondFilePath: string): boolean {
+	const firstFileInfo = fs.statSync(firstFilePath);
+	const secondFileInfo = fs.statSync(secondFilePath);
+	if (!firstFileInfo.isFile() || !secondFileInfo.isFile()) return false;
+	if (firstFileInfo.size !== secondFileInfo.size) return false;
+
+	const firstFile = fs.openSync(firstFilePath, 'r');
+	let secondFile: number | undefined;
+	try {
+		secondFile = fs.openSync(secondFilePath, 'r');
+		const firstBuffer = Buffer.alloc(FILE_COMPARE_CHUNK_SIZE);
+		const secondBuffer = Buffer.alloc(FILE_COMPARE_CHUNK_SIZE);
+		while (true) {
+			const firstSize = fs.readSync(firstFile, firstBuffer, 0, FILE_COMPARE_CHUNK_SIZE, null);
+			const secondSize = fs.readSync(
+				secondFile,
+				secondBuffer,
+				0,
+				FILE_COMPARE_CHUNK_SIZE,
+				null,
+			);
+			if (firstSize !== secondSize) return false;
+			if (!firstSize) return true;
+
+			const firstBytes = firstBuffer.subarray(0, firstSize);
+			const secondBytes = secondBuffer.subarray(0, secondSize);
+			if (firstBytes.compare(secondBytes) !== 0) return false;
+		}
+	} finally {
+		fs.closeSync(firstFile);
+		if (secondFile !== undefined) fs.closeSync(secondFile);
+	}
 }
 
 export function normalizeFilePath(path: string): string {
