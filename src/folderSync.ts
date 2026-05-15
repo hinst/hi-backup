@@ -9,6 +9,8 @@ export class FolderSync {
 	public readonly stats = new FolderSyncStats();
 	private fileTransformer: FileTransformer = new FileTransformer();
 	private readonly targetPaths: Set<string> = new Set();
+	private syncItemIndex = 0;
+	private syncItemCount = 0;
 
 	constructor(
 		private readonly sourcePath: string,
@@ -22,10 +24,21 @@ export class FolderSync {
 		if (!fs.statSync(this.sourcePath).isDirectory())
 			throw new Error('Need directory: ' + this.sourcePath);
 		const syncItems = this.readSyncItems(1, this.sourcePath);
-		console.log('Source: folders=' + this.stats.sourceFolders + ' files=' + this.stats.sourceFiles);
+		this.syncItemCount = syncItems.length;
+		console.log(
+			'Source [' +
+				this.syncItemCount +
+				'] folders=' +
+				this.stats.sourceFolders +
+				' files=' +
+				this.stats.sourceFiles,
+		);
 		fs.mkdirSync(this.targetPath, { recursive: true });
 		await this.syncItem(new FolderSyncItem(0, this.sourcePath, FileKind.DIRECTORY));
-		for (const syncItem of syncItems) await this.syncItem(syncItem);
+		for (const syncItem of syncItems) {
+			await this.syncItem(syncItem);
+			++this.syncItemIndex;
+		}
 		this.syncBackwards(this.targetPath);
 	}
 
@@ -39,11 +52,11 @@ export class FolderSync {
 		for (const syncItem of syncItems) {
 			switch (syncItem.kind) {
 				case FileKind.DIRECTORY: {
-					this.stats.sourceFolders++;
+					++this.stats.sourceFolders;
 					break;
 				}
 				case FileKind.FILE: {
-					this.stats.sourceFiles++;
+					++this.stats.sourceFiles;
 					break;
 				}
 			}
@@ -84,9 +97,10 @@ export class FolderSync {
 
 	private async syncFile(sourcePath: string, targetPath: string) {
 		const exists = fs.existsSync(targetPath);
-		if (!exists) console.log(chalk.green('+f') + ' ' + sourcePath + ' -> ' + targetPath);
+		if (!exists) this.writeProgress(chalk.green('+f') + ' ' + sourcePath + ' -> ' + targetPath);
 		const changed = await this.fileTransformer.syncFile(sourcePath, targetPath);
-		if (exists && changed) console.log(chalk.cyan('~f') + ' ' + sourcePath + ' -> ' + targetPath);
+		if (exists && changed)
+			this.writeProgress(chalk.cyan('~f') + ' ' + sourcePath + ' -> ' + targetPath);
 		return changed;
 	}
 
@@ -103,8 +117,9 @@ export class FolderSync {
 	}
 
 	private syncBackwards(targetPath: string) {
-		const stats = fs.statSync(targetPath);
-		if (stats.isDirectory()) {
+		this.syncItemIndex = -1;
+		const fileInfo = fs.statSync(targetPath);
+		if (fileInfo.isDirectory()) {
 			const entries = fs.readdirSync(targetPath, { withFileTypes: true });
 			for (const entry of entries) {
 				const itemPath = joinFilePath(targetPath, entry.name);
@@ -112,26 +127,32 @@ export class FolderSync {
 			}
 		}
 		if (!this.targetPaths.has(targetPath)) {
-			if (stats.isDirectory()) this.deleteDirectory('', targetPath);
-			if (stats.isFile()) this.deleteFile('', targetPath);
+			if (fileInfo.isDirectory()) this.deleteDirectory('', targetPath);
+			if (fileInfo.isFile()) this.deleteFile('', targetPath);
 		}
 	}
 
 	private deleteFile(sourceFilePath: string, targetFilePath: string) {
-		console.log(chalk.red('-f') + ' ' + sourceFilePath + ' -> ' + targetFilePath);
+		this.writeProgress(chalk.red('-f') + ' ' + sourceFilePath + ' -> ' + targetFilePath);
 		fs.unlinkSync(targetFilePath);
-		this.stats.deletedFiles++;
+		++this.stats.deletedFiles;
 	}
 
 	private deleteDirectory(sourcePath: string, targetPath: string) {
-		console.log(chalk.red('-d') + ' ' + sourcePath + ' -> ' + targetPath);
+		this.writeProgress(chalk.red('-d') + ' ' + sourcePath + ' -> ' + targetPath);
 		fs.rmSync(targetPath, { recursive: true });
-		this.stats.deletedFolders++;
+		++this.stats.deletedFolders;
 	}
 
 	private createDirectory(sourceFile: string, targetFile: string) {
-		console.log(chalk.green('+d') + ' ' + sourceFile + ' -> ' + targetFile);
+		this.writeProgress(chalk.green('+d') + ' ' + sourceFile + ' -> ' + targetFile);
 		fs.mkdirSync(targetFile, { recursive: true });
-		this.stats.newFolders++;
+		++this.stats.newFolders;
+	}
+
+	private writeProgress(text: string) {
+		if (this.syncItemIndex !== -1)
+			text = '[' + this.syncItemIndex + '/' + this.syncItemCount + '] ' + text;
+		console.log(text);
 	}
 }

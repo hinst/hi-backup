@@ -3,7 +3,6 @@ import path from 'node:path';
 import { INT32_SIZE, int32ToBuffer } from './array';
 
 const MAX_BUFFER_SIZE = 100 * 1024 * 1024;
-const FILE_COMPARE_CHUNK_SIZE = 1024 * 1024;
 
 export class FileFormatError extends Error {}
 
@@ -78,6 +77,8 @@ export function readNextByte(file: number): number | undefined {
 }
 
 export function compareFiles(firstFilePath: string, secondFilePath: string): boolean {
+	const CHUNK_SIZE = 1024 * 1024;
+	if (!fs.existsSync(secondFilePath)) return false;
 	const firstFileInfo = fs.statSync(firstFilePath);
 	const secondFileInfo = fs.statSync(secondFilePath);
 	if (!firstFileInfo.isFile() || !secondFileInfo.isFile()) return false;
@@ -87,17 +88,11 @@ export function compareFiles(firstFilePath: string, secondFilePath: string): boo
 	let secondFile: number | undefined;
 	try {
 		secondFile = fs.openSync(secondFilePath, 'r');
-		const firstBuffer = Buffer.alloc(FILE_COMPARE_CHUNK_SIZE);
-		const secondBuffer = Buffer.alloc(FILE_COMPARE_CHUNK_SIZE);
+		const firstBuffer = Buffer.alloc(CHUNK_SIZE);
+		const secondBuffer = Buffer.alloc(CHUNK_SIZE);
 		while (true) {
-			const firstSize = fs.readSync(firstFile, firstBuffer, 0, FILE_COMPARE_CHUNK_SIZE, null);
-			const secondSize = fs.readSync(
-				secondFile,
-				secondBuffer,
-				0,
-				FILE_COMPARE_CHUNK_SIZE,
-				null,
-			);
+			const firstSize = fs.readSync(firstFile, firstBuffer, 0, CHUNK_SIZE, null);
+			const secondSize = fs.readSync(secondFile, secondBuffer, 0, CHUNK_SIZE, null);
 			if (firstSize !== secondSize) return false;
 			if (!firstSize) return true;
 
