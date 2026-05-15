@@ -25,6 +25,8 @@ export class FolderSync {
 			throw new Error('Source path does not exist: ' + this.sourcePath);
 		if (!fs.statSync(this.sourcePath).isDirectory())
 			throw new Error('Need directory: ' + this.sourcePath);
+
+		console.log('Checking hash in target folder');
 		if ((await new FolderHasher(this.targetPath).check()) !== 0) {
 			console.warn(
 				'Hash inconsistencies detected, exiting. Delete hashes file to proceed: ' +
@@ -114,8 +116,10 @@ export class FolderSync {
 		const exists = fs.existsSync(targetPath);
 		if (!exists) this.writeProgress(chalk.green('+f') + ' ' + sourcePath + ' -> ' + targetPath);
 		const changed = await this.fileTransformer.syncFile(sourcePath, targetPath);
-		if (exists && changed)
+		if (exists && changed) {
 			this.writeProgress(chalk.cyan('~f') + ' ' + sourcePath + ' -> ' + targetPath);
+			++this.stats.updatedFiles;
+		}
 		return changed;
 	}
 
