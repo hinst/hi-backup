@@ -17,6 +17,9 @@ export class FolderSync {
 
 	async run() {
 		const sourceItems = this.readSourceItems(this.sourcePath);
+		for (const sourceItem of sourceItems) {
+			console.log(sourceItem.toString());
+		}
 	}
 
 	private readSourceItems(sourcePath: string): FolderSyncItem[] {

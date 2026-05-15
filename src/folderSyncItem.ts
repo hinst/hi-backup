@@ -16,7 +16,11 @@ export class FolderSyncItem {
 			: entry.isDirectory()
 				? FileKind.DIRECTORY
 				: undefined;
-		if (!fileKind) throw new Error('Undefined file kind');
+		if (fileKind == null) throw new Error('Undefined file kind');
 		return new FolderSyncItem(sourcePath, fileKind);
+	}
+
+	public toString() {
+		return this.path + ' ' + FileKind[this.type];
 	}
 }

@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import process from 'node:process';
 import { FolderEncryption } from './folderEncryption';
 import { FolderMirroring } from './folderMirroring';
+import { FolderSync } from './folderSync';
 import { TaskCommand, TaskConfig } from './taskConfig';
 
 async function main() {
@@ -18,10 +19,16 @@ async function main() {
 		taskConfig.validate();
 		console.log(taskConfig);
 		switch (taskConfig.command) {
-			case TaskCommand.MIRROR: {
+			case TaskCommand.COMPRESS: {
 				const mirroring = new FolderMirroring(taskConfig.sourcePath, taskConfig.targetPath);
 				await mirroring.sync();
 				console.log(mirroring.stats);
+				break;
+			}
+			case TaskCommand.MIRROR: {
+				const mirror = new FolderSync(taskConfig.sourcePath, taskConfig.targetPath);
+				await mirror.run();
+				console.log(mirror.stats);
 				break;
 			}
 		}

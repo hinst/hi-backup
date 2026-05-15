@@ -1,5 +1,6 @@
 export enum TaskCommand {
 	MIRROR = 'mirror',
+	COMPRESS = 'compress',
 }
 
 export class TaskConfig {
