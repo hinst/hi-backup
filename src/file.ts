@@ -124,3 +124,13 @@ export function normalizeFilePath(path: string): string {
 export function joinFilePath(...paths: string[]): string {
 	return normalizeFilePath(path.join(...paths));
 }
+
+export function readCountOfFiles(folderPath: string) {
+	const files = fs.readdirSync(folderPath, { withFileTypes: true });
+	let count = 0;
+	for (const file of files) {
+		if (file.isFile()) ++count;
+		if (file.isDirectory()) count += readCountOfFiles(joinFilePath(file.parentPath, file.name));
+	}
+	return count;
+}

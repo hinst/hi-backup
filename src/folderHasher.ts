@@ -1,11 +1,13 @@
 import fs from 'node:fs';
 import chalk from 'chalk';
-import { joinFilePath, readFileHash } from './file';
+import cliProgress from 'cli-progress';
+import { joinFilePath, readCountOfFiles, readFileHash } from './file';
 
 export class FolderHasher {
 	static readonly FILE_NAME = '.hashes.json';
 	readonly hashes: Record<string, string> = {};
 	readonly hashesFilePath: string;
+	private progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
 
 	constructor(readonly folderPath: string) {
 		this.hashesFilePath = joinFilePath(folderPath, FolderHasher.FILE_NAME);
@@ -22,23 +24,29 @@ export class FolderHasher {
 	}
 
 	private async readFolder(folderPath: string) {
+		if (folderPath === this.folderPath)
+			this.progressBar.start(readCountOfFiles(this.folderPath) - 1, 0); // Minus one for hashes file itself
 		const files = fs.readdirSync(folderPath, { withFileTypes: true });
 		for (const fileInfo of files) {
 			const filePath = joinFilePath(folderPath, fileInfo.name);
 			if (filePath === this.hashesFilePath) continue;
 			if (fileInfo.isDirectory()) {
 				await this.readFolder(filePath);
-			} else if (fileInfo.isFile()) this.hashes[filePath] = await readFileHash(filePath);
+			} else if (fileInfo.isFile()) {
+				this.hashes[filePath] = await readFileHash(filePath);
+				this.progressBar.increment();
+			}
 		}
+		if (folderPath === this.folderPath) this.progressBar.stop();
 	}
 
 	async check() {
+		this.clear();
 		if (!fs.existsSync(this.hashesFilePath)) return 0;
 		const fileText = fs.readFileSync(this.hashesFilePath, 'utf8');
 		const storedHashes = JSON.parse(fileText) as Record<string, string>;
 		if (typeof storedHashes !== 'object')
 			throw new Error('Need object in file: ' + this.hashesFilePath);
-		this.clear();
 		await this.readFolder(this.folderPath);
 
 		let deviationCount = 0;
