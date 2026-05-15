@@ -1,6 +1,7 @@
 import 'source-map-support/register';
 import fs from 'node:fs';
 import process from 'node:process';
+import chalk from 'chalk';
 import { FolderEncryption } from './folderEncryption';
 import { FolderMirroring } from './folderMirroring';
 import { FolderSync } from './folderSync';
@@ -15,7 +16,15 @@ async function main() {
 	if (!tasks?.length) console.warn('There are no tasks');
 	for (const taskData of tasks) {
 		const taskConfig = Object.assign(TaskConfig.createEmpty(), taskData);
-		console.time(taskConfig.toString());
+		const completionText =
+			chalk.bold('DONE') +
+			' ' +
+			chalk.green(taskConfig.sourcePath) +
+			' ' +
+			chalk.bold(taskConfig.command) +
+			' ' +
+			chalk.cyan(taskConfig.targetPath);
+		console.time(completionText);
 		taskConfig.validate();
 		console.log(taskConfig);
 		switch (taskConfig.command) {
@@ -32,7 +41,7 @@ async function main() {
 				break;
 			}
 		}
-		console.timeEnd(taskConfig.toString());
+		console.timeEnd(completionText);
 	}
 }
 

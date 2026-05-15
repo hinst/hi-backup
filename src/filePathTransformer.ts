@@ -1,4 +1,4 @@
-import { FileKind } from './file';
+import type { FileKind } from './file';
 
 export class FilePathTransformer {
 	encode(path: string, type: FileKind) {
