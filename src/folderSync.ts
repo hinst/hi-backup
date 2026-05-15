@@ -6,8 +6,10 @@ import { FolderSyncStats } from './folderStats';
 import { FolderSyncItem } from './folderSyncItem';
 
 export class FolderSync {
+	public ignoredList: string[] = [];
+	public fileTransformer: FileTransformer = new FileTransformer();
 	public readonly stats = new FolderSyncStats();
-	private fileTransformer: FileTransformer = new FileTransformer();
+
 	private readonly targetPaths: Set<string> = new Set();
 	private syncItemIndex = 0;
 	private syncItemCount = 0;
@@ -15,7 +17,6 @@ export class FolderSync {
 	constructor(
 		private readonly sourcePath: string,
 		private readonly targetPath: string,
-		private readonly ignoredList: string[] = [],
 	) {}
 
 	async run() {
@@ -46,10 +47,10 @@ export class FolderSync {
 		const syncItems: FolderSyncItem[] = [];
 		const sourceFiles = fs.readdirSync(sourcePath, { withFileTypes: true });
 		for (const entry of sourceFiles) {
-			if (depth === 0 && this.checkIgnored(entry.name)) continue;
+			if (depth === 1 && this.checkIgnored(entry.name)) continue;
 			syncItems.push(FolderSyncItem.create(depth, entry));
 		}
-		for (const syncItem of syncItems) {
+		for (const syncItem of syncItems.slice()) {
 			switch (syncItem.kind) {
 				case FileKind.DIRECTORY: {
 					++this.stats.sourceFolders;
