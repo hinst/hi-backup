@@ -59,7 +59,7 @@ export class FolderSync {
 
 	private async syncItem(syncItem: FolderSyncItem) {
 		const sourcePath = syncItem.path;
-		this.validateSourcePath(sourcePath);
+		this.validateSyncItem(syncItem);
 		const sourceRelativePath = sourcePath.substring(this.sourcePath.length);
 		const targetRelativePath = this.filePathTransformer.encode(sourceRelativePath, syncItem.kind);
 		const targetPath = this.targetPath + targetRelativePath;
@@ -78,15 +78,16 @@ export class FolderSync {
 		}
 	}
 
-	private validateSourcePath(sourcePath: string) {
-		if (!sourcePath.startsWith(this.sourcePath))
+	private validateSyncItem(syncItem: FolderSyncItem) {
+		if (!syncItem.path.startsWith(this.sourcePath))
 			throw new Error(
 				'Folder sync logic error: source path outside main source path: ' +
 					this.sourcePath +
 					' -> ' +
-					sourcePath,
+					syncItem.path,
 			);
-		if (!fs.existsSync(sourcePath)) throw new Error('Source path does not exist: ' + sourcePath);
+		if (!fs.existsSync(syncItem.path))
+			throw new Error('Source path does not exist: ' + syncItem.path);
 	}
 
 	private deleteFile(sourceFilePath: string, targetFilePath: string) {
