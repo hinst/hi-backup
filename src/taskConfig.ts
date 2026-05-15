@@ -16,7 +16,7 @@ export class TaskConfig {
 		if (!this.command?.length) throw new TaskConfigError('Need command');
 	}
 
-	static createEmpty() {
+	static createUndefined() {
 		//@ts-ignore
 		return new TaskConfig();
 	}

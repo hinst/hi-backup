@@ -15,7 +15,7 @@ async function main() {
 	const tasks: TaskConfig[] = JSON.parse(fs.readFileSync(configFilePath).toString());
 	if (!tasks?.length) console.warn('There are no tasks');
 	for (const taskData of tasks) {
-		const taskConfig = Object.assign(TaskConfig.createEmpty(), taskData);
+		const taskConfig = Object.assign(TaskConfig.createUndefined(), taskData);
 		const completionText =
 			chalk.bold('DONE') +
 			' ' +
