@@ -11,7 +11,7 @@ export class FolderSync {
 
 	constructor(
 		private readonly sourcePath: string,
-		private readonly destinationPath: string,
+		private readonly targetPath: string,
 		private readonly ignoredList: string[] = [],
 	) {}
 
@@ -22,13 +22,9 @@ export class FolderSync {
 			throw new Error('Need directory: ' + this.sourcePath);
 		const syncItems = this.readSyncItems(1, this.sourcePath);
 		console.log('Source: folders=' + this.stats.sourceFolders + ' files=' + this.stats.sourceFiles);
-		fs.mkdirSync(this.destinationPath, { recursive: true });
-		await this.syncFolder(new FolderSyncItem(0, this.sourcePath, FileKind.DIRECTORY));
-		for (const syncItem of syncItems) {
-			if (syncItem.kind === FileKind.DIRECTORY) {
-				await this.syncFolder(syncItem);
-			}
-		}
+		fs.mkdirSync(this.targetPath, { recursive: true });
+		await this.syncItem(new FolderSyncItem(0, this.sourcePath, FileKind.DIRECTORY));
+		for (const syncItem of syncItems) await this.syncItem(syncItem);
 	}
 
 	private readSyncItems(depth: number, sourcePath: string): FolderSyncItem[] {
@@ -61,18 +57,25 @@ export class FolderSync {
 		);
 	}
 
-	private async syncFolder(syncItem: FolderSyncItem) {
-		const sourceDirPath = syncItem.path;
-		this.validateSourcePath(sourceDirPath);
-		const sourceRelativePath = sourceDirPath.substring(this.sourcePath.length);
-		const targetRelativePath = this.filePathTransformer.encode(
-			sourceRelativePath,
-			FileKind.DIRECTORY,
-		);
-		const targetDirPath = this.destinationPath + targetRelativePath;
-		if (fs.existsSync(targetDirPath) && !fs.statSync(targetDirPath).isDirectory())
-			this.deleteFile(sourceDirPath, targetDirPath);
-		if (!fs.existsSync(targetDirPath)) this.createDirectory(sourceDirPath, targetDirPath);
+	private async syncItem(syncItem: FolderSyncItem) {
+		const sourcePath = syncItem.path;
+		this.validateSourcePath(sourcePath);
+		const sourceRelativePath = sourcePath.substring(this.sourcePath.length);
+		const targetRelativePath = this.filePathTransformer.encode(sourceRelativePath, syncItem.kind);
+		const targetPath = this.targetPath + targetRelativePath;
+		switch (syncItem.kind) {
+			case FileKind.DIRECTORY: {
+				if (fs.existsSync(targetPath) && fs.statSync(targetPath).isFile())
+					this.deleteFile(sourcePath, targetPath);
+				if (!fs.existsSync(targetPath)) this.createDirectory(sourcePath, targetPath);
+				break;
+			}
+			case FileKind.FILE: {
+				if (fs.existsSync(targetPath) && fs.statSync(targetPath).isDirectory())
+					this.deleteDirectory(targetPath);
+				break;
+			}
+		}
 	}
 
 	private validateSourcePath(sourcePath: string) {
@@ -90,6 +93,12 @@ export class FolderSync {
 		console.log(chalk.red('-f') + ' ' + sourceFilePath + ' ' + targetFilePath);
 		fs.unlinkSync(targetFilePath);
 		this.stats.deletedFiles++;
+	}
+
+	private deleteDirectory(targetPath: string) {
+		console.log(chalk.red('-d ') + targetPath);
+		fs.rmSync(targetPath, { recursive: true });
+		this.stats.deletedFolders++;
 	}
 
 	private createDirectory(sourceFile: string, targetFile: string) {

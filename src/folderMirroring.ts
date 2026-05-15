@@ -112,8 +112,8 @@ export class FolderMirroring {
 	}
 
 	private deleteFolder(targetPath: string) {
-		fs.rmSync(targetPath, { recursive: true });
 		console.log(chalk.red('-d ') + targetPath);
+		fs.rmSync(targetPath, { recursive: true });
 		this.stats.deletedFolders++;
 	}
 
