@@ -107,7 +107,7 @@ export function compareFiles(firstFilePath: string, secondFilePath: string): boo
 	}
 }
 
-export function getHash(filePath: string): Promise<string> {
+export function readFileHash(filePath: string): Promise<string> {
 	return new Promise((resolve, reject) => {
 		const hash = crypto.createHash('sha256');
 		const rs = fs.createReadStream(filePath);

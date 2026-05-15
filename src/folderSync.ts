@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import chalk from 'chalk';
-import { FileKind, getHash, joinFilePath } from './file';
+import { FileKind, joinFilePath, readFileHash } from './file';
 import { FileTransformer } from './fileTransformer';
+import { FolderHasher } from './folderHasher';
 import { FolderSyncStats } from './folderStats';
 import { FolderSyncItem } from './folderSyncItem';
 
@@ -40,8 +41,10 @@ export class FolderSync {
 			await this.syncItem(syncItem);
 			++this.syncItemIndex;
 		}
+		console.log('Sync backwards');
 		this.syncBackwards(this.targetPath);
-		await this.writeHashesFile();
+		console.log('Generate hashes');
+		await new FolderHasher(this.targetPath).generate();
 	}
 
 	private readSyncItems(depth: number, sourcePath: string): FolderSyncItem[] {
@@ -131,30 +134,6 @@ export class FolderSync {
 		if (!this.targetPaths.has(targetPath)) {
 			if (fileInfo.isDirectory()) this.deleteDirectory('', targetPath);
 			if (fileInfo.isFile()) this.deleteFile('', targetPath);
-		}
-	}
-
-	private async writeHashesFile() {
-		const hashesPath = joinFilePath(this.targetPath, 'hashes.json');
-		const hashes: Record<string, string> = {};
-		await this.collectFileHashes(this.targetPath, hashes, hashesPath);
-		fs.writeFileSync(hashesPath, JSON.stringify(hashes, null, 2));
-	}
-
-	private async collectFileHashes(
-		folderPath: string,
-		hashes: Record<string, string>,
-		hashesFilePath: string,
-	): Promise<void> {
-		const entries = fs.readdirSync(folderPath, { withFileTypes: true });
-		for (const entry of entries) {
-			const itemPath = joinFilePath(folderPath, entry.name);
-			if (itemPath === hashesFilePath) continue;
-			if (entry.isDirectory()) {
-				await this.collectFileHashes(itemPath, hashes, hashesFilePath);
-				continue;
-			}
-			if (entry.isFile()) hashes[itemPath] = await getHash(itemPath);
 		}
 	}
 
