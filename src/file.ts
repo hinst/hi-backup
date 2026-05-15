@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import path from 'node:path';
 import { INT32_SIZE, int32ToBuffer } from './array';
 
 const MAX_BUFFER_SIZE = 100 * 1024 * 1024;
@@ -77,4 +78,8 @@ export function readNextByte(file: number): number | undefined {
 
 export function normalizeFilePath(path: string): string {
 	return path.replaceAll('\\', '/');
+}
+
+export function joinFilePath(...paths: string[]): string {
+	return normalizeFilePath(path.join(...paths));
 }

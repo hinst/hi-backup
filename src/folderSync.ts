@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import chalk from 'chalk';
-import { FileKind, normalizeFilePath } from './file';
+import { FileKind, joinFilePath } from './file';
 import { FileTransformer } from './fileTransformer';
 import { FolderSyncStats } from './folderStats';
 import { FolderSyncItem } from './folderSyncItem';
@@ -64,7 +64,7 @@ export class FolderSync {
 		this.validateSyncItem(syncItem);
 		const sourceRelativePath = sourcePath.substring(this.sourcePath.length);
 		const targetRelativePath = this.fileTransformer.encodePath(sourceRelativePath, syncItem.kind);
-		const targetPath = this.targetPath + targetRelativePath;
+		const targetPath = joinFilePath(this.targetPath, targetRelativePath);
 		this.targetPaths.add(targetPath);
 		switch (syncItem.kind) {
 			case FileKind.DIRECTORY: {
@@ -107,7 +107,7 @@ export class FolderSync {
 		if (stats.isDirectory()) {
 			const entries = fs.readdirSync(targetPath, { withFileTypes: true });
 			for (const entry of entries) {
-				const itemPath = normalizeFilePath(targetPath + '/' + entry.name);
+				const itemPath = joinFilePath(targetPath, entry.name);
 				this.syncBackwards(itemPath);
 			}
 		}
