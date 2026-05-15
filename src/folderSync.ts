@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import chalk from 'chalk';
-import { FileType } from './file';
+import { FileKind } from './file';
 import { FilePathTransformer } from './filePathTransformer';
 import { FolderSyncStats } from './folderStats';
 
@@ -39,7 +39,7 @@ export class FolderSync {
 	}
 
 	private deleteFile(targetFilePath: string) {
-		const decodedTargetPath = this.filePathTransformer.decode(targetFilePath, FileType.FILE);
+		const decodedTargetPath = this.filePathTransformer.decode(targetFilePath, FileKind.FILE);
 		console.log(chalk.red('-f') + ' ' + decodedTargetPath + ' ' + targetFilePath);
 		fs.unlinkSync(targetFilePath);
 		this.stats.deletedFiles++;

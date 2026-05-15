@@ -5,9 +5,9 @@ const MAX_BUFFER_SIZE = 100 * 1024 * 1024;
 
 export class FileFormatError extends Error {}
 
-export enum FileType {
+export enum FileKind {
 	FILE,
-	DIRECTORY
+	DIRECTORY,
 }
 
 function writeInt32ToFile(file: number, value: number): void {
