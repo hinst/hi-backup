@@ -16,20 +16,23 @@ export class FolderSync {
 	) {}
 
 	async run() {
-		const sourceItems = this.readSourceItems(this.sourcePath);
-		for (const sourceItem of sourceItems) {
-			console.log(sourceItem.toString());
-		}
+		const sourceItems = this.readSyncItems(0, this.sourcePath);
+		for (const sourceItem of sourceItems)
+			console.log('\t'.repeat(sourceItem.depth) + sourceItem.toString());
 	}
 
-	private readSourceItems(sourcePath: string): FolderSyncItem[] {
-		const sourceItems: FolderSyncItem[] = [];
+	private readSyncItems(depth: number, sourcePath: string): FolderSyncItem[] {
+		const syncItems: FolderSyncItem[] = [];
 		const sourceFiles = fs.readdirSync(sourcePath, { withFileTypes: true });
 		for (const entry of sourceFiles) {
-			if (sourcePath === this.sourcePath && this.checkIgnored(entry.name)) continue;
-			sourceItems.push(FolderSyncItem.create(entry));
+			if (depth === 0 && this.checkIgnored(entry.name)) continue;
+			syncItems.push(FolderSyncItem.create(depth, entry));
 		}
-		return sourceItems;
+		for (const syncItem of syncItems) {
+			if (syncItem.kind === FileKind.DIRECTORY)
+				syncItems.push(...this.readSyncItems(depth + 1, syncItem.path));
+		}
+		return syncItems;
 	}
 
 	private checkIgnored(fileName: string): boolean {

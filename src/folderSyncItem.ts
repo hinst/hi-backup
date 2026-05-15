@@ -3,11 +3,12 @@ import { FileKind } from './file';
 
 export class FolderSyncItem {
 	constructor(
+		readonly depth: number,
 		readonly path: string,
-		readonly type: FileKind,
+		readonly kind: FileKind,
 	) {}
 
-	public static create(entry: fs.Dirent<string>) {
+	public static create(depth: number, entry: fs.Dirent<string>) {
 		let sourcePath = entry.parentPath + '/' + entry.name;
 		sourcePath = sourcePath.replaceAll('\\', '/');
 		const fileKind = entry.isFile()
@@ -16,10 +17,11 @@ export class FolderSyncItem {
 				? FileKind.DIRECTORY
 				: undefined;
 		if (fileKind == null) throw new Error('Undefined file kind');
-		return new FolderSyncItem(sourcePath, fileKind);
+		return new FolderSyncItem(depth, sourcePath, fileKind);
 	}
 
 	public toString() {
-		return this.path + ' ' + FileKind[this.type];
+		const kind = this.kind === FileKind.DIRECTORY ? '[D] ' : '';
+		return kind + this.path;
 	}
 }
