@@ -2,8 +2,8 @@ import 'source-map-support/register';
 import fs from 'node:fs';
 import process from 'node:process';
 import chalk from 'chalk';
+import { FileTransformerGz } from './fileTransformerGz';
 import { FolderEncryption } from './folderEncryption';
-import { FolderMirroring } from './folderMirroring';
 import { FolderSync } from './folderSync';
 import { TaskCommand, TaskConfig } from './taskConfig';
 
@@ -29,9 +29,10 @@ async function main() {
 		console.log(taskConfig);
 		switch (taskConfig.command) {
 			case TaskCommand.COMPRESS: {
-				const mirroring = new FolderMirroring(taskConfig.sourcePath, taskConfig.targetPath);
-				await mirroring.sync();
-				console.log(mirroring.stats);
+				const mirror = new FolderSync(taskConfig.sourcePath, taskConfig.targetPath);
+				mirror.fileTransformer = new FileTransformerGz();
+				await mirror.run();
+				console.log(mirror.stats);
 				break;
 			}
 			case TaskCommand.MIRROR: {
