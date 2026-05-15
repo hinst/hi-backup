@@ -25,11 +25,14 @@ export class FolderHasher {
 
 	private async readFolder(folderPath: string) {
 		if (folderPath === this.folderPath)
-			this.progressBar.start(readCountOfFiles(this.folderPath) - 1, 0); // Minus one for hashes file itself
+			this.progressBar.start(readCountOfFiles(this.folderPath), 0); // Minus one for hashes file itself
 		const files = fs.readdirSync(folderPath, { withFileTypes: true });
 		for (const fileInfo of files) {
 			const filePath = joinFilePath(folderPath, fileInfo.name);
-			if (filePath === this.hashesFilePath) continue;
+			if (filePath === this.hashesFilePath) {
+				this.progressBar.increment();
+				continue;
+			}
 			if (fileInfo.isDirectory()) {
 				await this.readFolder(filePath);
 			} else if (fileInfo.isFile()) {
