@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import chalk from 'chalk';
 import { FileKind } from './file';
-import { FileTransformer } from './filePathTransformer';
+import { FileTransformer } from './fileTransformer';
 import { FolderSyncStats } from './folderStats';
 import { FolderSyncItem } from './folderSyncItem';
 

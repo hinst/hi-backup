@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import type { FileKind } from './file';
 
 export class FileTransformer {
@@ -7,6 +8,11 @@ export class FileTransformer {
 
 	/** @returns true if file got changed */
 	async syncFile(sourcePath: string, targetPath: string): Promise<boolean> {
-		return true;
+		return new Promise((resolve, reject) => {
+			fs.copyFile(sourcePath, targetPath, (error) => {
+				if (error) reject(error);
+				else resolve(true);
+			});
+		});
 	}
 }
