@@ -17,8 +17,7 @@ export class FolderSync {
 
 	async run() {
 		const sourceItems = this.readSyncItems(0, this.sourcePath);
-		for (const sourceItem of sourceItems)
-			console.log('\t'.repeat(sourceItem.depth) + sourceItem.toString());
+		console.log('Source: folders=' + this.stats.sourceFolders + ' files=' + this.stats.sourceFiles);
 	}
 
 	private readSyncItems(depth: number, sourcePath: string): FolderSyncItem[] {
@@ -29,6 +28,16 @@ export class FolderSync {
 			syncItems.push(FolderSyncItem.create(depth, entry));
 		}
 		for (const syncItem of syncItems) {
+			switch (syncItem.kind) {
+				case FileKind.DIRECTORY: {
+					this.stats.sourceFolders++;
+					break;
+				}
+				case FileKind.FILE: {
+					this.stats.sourceFiles++;
+					break;
+				}
+			}
 			if (syncItem.kind === FileKind.DIRECTORY)
 				syncItems.push(...this.readSyncItems(depth + 1, syncItem.path));
 		}
