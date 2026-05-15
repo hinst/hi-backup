@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import { compareFiles, type FileKind } from './file';
 
 export class FileTransformer {
-	encodePath(path: string, type: FileKind) {
+	encodePath(path: string, _: FileKind) {
 		return path;
 	}
 
