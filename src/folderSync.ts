@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import chalk from 'chalk';
-import { FileKind, joinFilePath } from './file';
+import { FileKind, getHash, joinFilePath } from './file';
 import { FileTransformer } from './fileTransformer';
 import { FolderSyncStats } from './folderStats';
 import { FolderSyncItem } from './folderSyncItem';
@@ -41,6 +41,7 @@ export class FolderSync {
 			++this.syncItemIndex;
 		}
 		this.syncBackwards(this.targetPath);
+		await this.writeHashesFile();
 	}
 
 	private readSyncItems(depth: number, sourcePath: string): FolderSyncItem[] {
@@ -133,6 +134,30 @@ export class FolderSync {
 		}
 	}
 
+	private async writeHashesFile() {
+		const hashesPath = joinFilePath(this.targetPath, 'hashes.json');
+		const hashes: Record<string, string> = {};
+		await this.collectFileHashes(this.targetPath, hashes, hashesPath);
+		fs.writeFileSync(hashesPath, JSON.stringify(hashes, null, 2));
+	}
+
+	private async collectFileHashes(
+		folderPath: string,
+		hashes: Record<string, string>,
+		hashesFilePath: string,
+	): Promise<void> {
+		const entries = fs.readdirSync(folderPath, { withFileTypes: true });
+		for (const entry of entries) {
+			const itemPath = joinFilePath(folderPath, entry.name);
+			if (itemPath === hashesFilePath) continue;
+			if (entry.isDirectory()) {
+				await this.collectFileHashes(itemPath, hashes, hashesFilePath);
+				continue;
+			}
+			if (entry.isFile()) hashes[itemPath] = await getHash(itemPath);
+		}
+	}
+
 	private deleteFile(sourceFilePath: string, targetFilePath: string) {
 		this.writeProgress(chalk.red('-f') + ' ' + sourceFilePath + ' -> ' + targetFilePath);
 		fs.unlinkSync(targetFilePath);
@@ -140,20 +165,20 @@ export class FolderSync {
 	}
 
 	private deleteDirectory(sourcePath: string, targetPath: string) {
-		this.writeProgress(chalk.red('-d') + ' ' + sourcePath + ' -> ' + targetPath);
+		this.writeProgress(chalk.red('-D') + ' ' + sourcePath + ' -> ' + targetPath);
 		fs.rmSync(targetPath, { recursive: true });
 		++this.stats.deletedFolders;
 	}
 
 	private createDirectory(sourceFile: string, targetFile: string) {
-		this.writeProgress(chalk.green('+d') + ' ' + sourceFile + ' -> ' + targetFile);
+		this.writeProgress(chalk.green('+D') + ' ' + sourceFile + ' -> ' + targetFile);
 		fs.mkdirSync(targetFile, { recursive: true });
 		++this.stats.newFolders;
 	}
 
 	private writeProgress(text: string) {
 		if (this.syncItemIndex !== -1)
-			text = '[' + this.syncItemIndex + '/' + this.syncItemCount + '] ' + text;
+			text = '[' + (this.syncItemIndex + 1) + '/' + this.syncItemCount + '] ' + text;
 		console.log(text);
 	}
 }

@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { INT32_SIZE, int32ToBuffer } from './array';
@@ -104,6 +105,16 @@ export function compareFiles(firstFilePath: string, secondFilePath: string): boo
 		fs.closeSync(firstFile);
 		if (secondFile !== undefined) fs.closeSync(secondFile);
 	}
+}
+
+export function getHash(filePath: string): Promise<string> {
+	return new Promise((resolve, reject) => {
+		const hash = crypto.createHash('sha256');
+		const rs = fs.createReadStream(filePath);
+		rs.on('error', reject);
+		rs.on('data', (chunk) => hash.update(chunk));
+		rs.on('end', () => resolve(hash.digest('hex')));
+	});
 }
 
 export function normalizeFilePath(path: string): string {
