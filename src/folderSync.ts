@@ -62,18 +62,17 @@ export class FolderSync {
 	}
 
 	private async syncFolder(syncItem: FolderSyncItem) {
-		const sourceFolderPath = syncItem.path;
-		this.validateSourcePath(sourceFolderPath);
-		const sourceRelativePath = sourceFolderPath.substring(this.sourcePath.length);
+		const sourceDirPath = syncItem.path;
+		this.validateSourcePath(sourceDirPath);
+		const sourceRelativePath = sourceDirPath.substring(this.sourcePath.length);
 		const targetRelativePath = this.filePathTransformer.encode(
 			sourceRelativePath,
 			FileKind.DIRECTORY,
 		);
-		const targetFullPath = this.destinationPath + targetRelativePath;
-		console.log('syncFolder ' + sourceFolderPath + ' ' + targetFullPath);
-		if (fs.existsSync(targetFullPath) && !fs.statSync(targetFullPath).isDirectory()) {
-			this.deleteFile(sourceFolderPath, targetFullPath);
-		}
+		const targetDirPath = this.destinationPath + targetRelativePath;
+		if (fs.existsSync(targetDirPath) && !fs.statSync(targetDirPath).isDirectory())
+			this.deleteFile(sourceDirPath, targetDirPath);
+		if (!fs.existsSync(targetDirPath)) this.createDirectory(sourceDirPath, targetDirPath);
 	}
 
 	private validateSourcePath(sourcePath: string) {
@@ -84,12 +83,18 @@ export class FolderSync {
 					' -> ' +
 					sourcePath,
 			);
+		if (!fs.existsSync(sourcePath)) throw new Error('Source path does not exist: ' + sourcePath);
 	}
 
 	private deleteFile(sourceFilePath: string, targetFilePath: string) {
-		const decodedTargetPath = this.filePathTransformer.decode(targetFilePath, FileKind.FILE);
 		console.log(chalk.red('-f') + ' ' + sourceFilePath + ' ' + targetFilePath);
 		fs.unlinkSync(targetFilePath);
 		this.stats.deletedFiles++;
+	}
+
+	private createDirectory(sourceFile: string, targetFile: string) {
+		console.log(chalk.green('+d') + ' ' + sourceFile + ' ' + targetFile);
+		fs.mkdirSync(targetFile, { recursive: true });
+		this.stats.newFolders++;
 	}
 }
