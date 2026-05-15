@@ -25,6 +25,14 @@ export class FolderSync {
 			throw new Error('Source path does not exist: ' + this.sourcePath);
 		if (!fs.statSync(this.sourcePath).isDirectory())
 			throw new Error('Need directory: ' + this.sourcePath);
+		if ((await new FolderHasher(this.targetPath).check()) !== 0) {
+			console.warn(
+				'Hash inconsistencies detected, exiting. Delete hashes file to proceed: ' +
+					FolderHasher.FILE_NAME,
+			);
+			return;
+		}
+
 		const syncItems = this.readSyncItems(1, this.sourcePath);
 		this.syncItemCount = syncItems.length;
 		console.log(
@@ -45,6 +53,8 @@ export class FolderSync {
 		this.syncBackwards(this.targetPath);
 		console.log('Generate hashes');
 		await new FolderHasher(this.targetPath).generate();
+		console.log('Check hashes');
+		await new FolderHasher(this.targetPath).check();
 	}
 
 	private readSyncItems(depth: number, sourcePath: string): FolderSyncItem[] {

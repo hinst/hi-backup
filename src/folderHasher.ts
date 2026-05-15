@@ -1,17 +1,22 @@
 import fs from 'node:fs';
+import chalk from 'chalk';
 import { joinFilePath, readFileHash } from './file';
 
-const HASHES_FILE_NAME = '.hashes.json';
-
 export class FolderHasher {
+	static readonly FILE_NAME = '.hashes.json';
 	readonly hashes: Record<string, string> = {};
 	readonly hashesFilePath: string;
 
 	constructor(readonly folderPath: string) {
-		this.hashesFilePath = joinFilePath(folderPath, HASHES_FILE_NAME);
+		this.hashesFilePath = joinFilePath(folderPath, FolderHasher.FILE_NAME);
+	}
+
+	private clear() {
+		for (const key of Object.keys(this.hashes)) delete this.hashes[key];
 	}
 
 	async generate() {
+		this.clear();
 		await this.readFolder(this.folderPath);
 		fs.writeFileSync(this.hashesFilePath, JSON.stringify(this.hashes, null, '\t'));
 	}
@@ -25,5 +30,49 @@ export class FolderHasher {
 				await this.readFolder(filePath);
 			} else if (fileInfo.isFile()) this.hashes[filePath] = await readFileHash(filePath);
 		}
+	}
+
+	async check() {
+		if (!fs.existsSync(this.hashesFilePath)) return 0;
+		const fileText = fs.readFileSync(this.hashesFilePath, 'utf8');
+		const storedHashes = JSON.parse(fileText) as Record<string, string>;
+		if (typeof storedHashes !== 'object')
+			throw new Error('Need object in file: ' + this.hashesFilePath);
+		this.clear();
+		await this.readFolder(this.folderPath);
+
+		let deviationCount = 0;
+		let totalCount = 0;
+		const allPaths = new Set<string>([...Object.keys(storedHashes), ...Object.keys(this.hashes)]);
+		for (const filePath of [...allPaths].sort()) {
+			++totalCount;
+			const expectedHash = storedHashes[filePath];
+			const actualHash = this.hashes[filePath];
+			if (expectedHash === undefined) {
+				console.log(chalk.yellow('[!]') + ' Unexpected file: ' + filePath);
+				++deviationCount;
+				continue;
+			}
+			if (actualHash === undefined) {
+				console.log(chalk.yellow('[!]') + ' Missing file: ' + filePath);
+				++deviationCount;
+				continue;
+			}
+			if (actualHash !== expectedHash) {
+				console.log(chalk.yellow('[!]') + ' Wrong hash: ' + filePath);
+				++deviationCount;
+			}
+		}
+
+		if (deviationCount > 0)
+			console.log(
+				'Hash check: deviated ' +
+					chalk.yellow(deviationCount) +
+					' of total ' +
+					totalCount +
+					' files',
+			);
+		else console.log('Hash is ' + chalk.green('OK') + ' for files [' + totalCount + ']');
+		return deviationCount;
 	}
 }

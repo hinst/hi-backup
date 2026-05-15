@@ -8,6 +8,7 @@ export class TaskConfig {
 		readonly sourcePath: string,
 		readonly targetPath: string,
 		readonly command: TaskCommand,
+		readonly hashOnly: boolean,
 	) {}
 
 	validate() {

@@ -4,6 +4,7 @@ import process from 'node:process';
 import chalk from 'chalk';
 import { FileTransformerGz } from './fileTransformerGz';
 import { FolderEncryption } from './folderEncryption';
+import { FolderHasher } from './folderHasher';
 import { FolderSync } from './folderSync';
 import { TaskCommand, TaskConfig } from './taskConfig';
 
@@ -24,23 +25,25 @@ async function main() {
 			chalk.bold(taskConfig.command) +
 			' ' +
 			chalk.cyan(taskConfig.targetPath);
+
 		console.time(completionText);
 		taskConfig.validate();
 		console.log(taskConfig);
+		const mirror = new FolderSync(taskConfig.sourcePath, taskConfig.targetPath);
 		switch (taskConfig.command) {
 			case TaskCommand.COMPRESS: {
-				const mirror = new FolderSync(taskConfig.sourcePath, taskConfig.targetPath);
 				mirror.fileTransformer = new FileTransformerGz();
-				await mirror.run();
-				console.log(mirror.stats);
 				break;
 			}
 			case TaskCommand.MIRROR: {
-				const mirror = new FolderSync(taskConfig.sourcePath, taskConfig.targetPath);
-				await mirror.run();
-				console.log(mirror.stats);
 				break;
 			}
+		}
+		if (taskConfig.hashOnly) {
+			await new FolderHasher(taskConfig.targetPath).check();
+		} else {
+			await mirror.run();
+			console.log(mirror.stats);
 		}
 		console.timeEnd(completionText);
 	}
