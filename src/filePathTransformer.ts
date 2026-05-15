@@ -1,11 +1,12 @@
 import type { FileKind } from './file';
 
-export class FilePathTransformer {
-	encode(path: string, type: FileKind) {
+export class FileTransformer {
+	encodePath(path: string, type: FileKind) {
 		return path;
 	}
 
-	decode(path: string, type: FileKind) {
-		return path;
+	/** @returns true if file got changed */
+	async syncFile(sourcePath: string, targetPath: string): Promise<boolean> {
+		return true;
 	}
 }

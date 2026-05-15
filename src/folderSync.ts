@@ -1,13 +1,13 @@
 import fs from 'node:fs';
 import chalk from 'chalk';
 import { FileKind } from './file';
-import { FilePathTransformer } from './filePathTransformer';
+import { FileTransformer } from './filePathTransformer';
 import { FolderSyncStats } from './folderStats';
 import { FolderSyncItem } from './folderSyncItem';
 
 export class FolderSync {
 	public readonly stats = new FolderSyncStats();
-	private filePathTransformer: FilePathTransformer = new FilePathTransformer();
+	private fileTransformer: FileTransformer = new FileTransformer();
 
 	constructor(
 		private readonly sourcePath: string,
@@ -61,7 +61,7 @@ export class FolderSync {
 		const sourcePath = syncItem.path;
 		this.validateSyncItem(syncItem);
 		const sourceRelativePath = sourcePath.substring(this.sourcePath.length);
-		const targetRelativePath = this.filePathTransformer.encode(sourceRelativePath, syncItem.kind);
+		const targetRelativePath = this.fileTransformer.encodePath(sourceRelativePath, syncItem.kind);
 		const targetPath = this.targetPath + targetRelativePath;
 		switch (syncItem.kind) {
 			case FileKind.DIRECTORY: {
@@ -73,9 +73,18 @@ export class FolderSync {
 			case FileKind.FILE: {
 				if (fs.existsSync(targetPath) && fs.statSync(targetPath).isDirectory())
 					this.deleteDirectory(targetPath);
+				await this.syncFile(syncItem.path, targetPath);
 				break;
 			}
 		}
+	}
+
+	private async syncFile(sourcePath: string, targetPath: string) {
+		const exists = fs.existsSync(targetPath);
+		if (!exists) console.log(chalk.green('+f') + ' ' + sourcePath + ' -> ' + targetPath);
+		const changed = await this.fileTransformer.syncFile(sourcePath, targetPath);
+		if (exists && changed) console.log(chalk.cyan('~f') + ' ' + sourcePath + ' -> ' + targetPath);
+		return changed;
 	}
 
 	private validateSyncItem(syncItem: FolderSyncItem) {
@@ -91,7 +100,7 @@ export class FolderSync {
 	}
 
 	private deleteFile(sourceFilePath: string, targetFilePath: string) {
-		console.log(chalk.red('-f') + ' ' + sourceFilePath + ' ' + targetFilePath);
+		console.log(chalk.red('-f') + ' ' + sourceFilePath + ' -> ' + targetFilePath);
 		fs.unlinkSync(targetFilePath);
 		this.stats.deletedFiles++;
 	}
@@ -103,7 +112,7 @@ export class FolderSync {
 	}
 
 	private createDirectory(sourceFile: string, targetFile: string) {
-		console.log(chalk.green('+d') + ' ' + sourceFile + ' ' + targetFile);
+		console.log(chalk.green('+d') + ' ' + sourceFile + ' -> ' + targetFile);
 		fs.mkdirSync(targetFile, { recursive: true });
 		this.stats.newFolders++;
 	}
