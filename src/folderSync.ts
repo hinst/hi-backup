@@ -33,6 +33,8 @@ export class FolderSync {
 		if (!fs.statSync(this.sourcePath).isDirectory())
 			throw new Error('Need directory: ' + this.sourcePath);
 		if (fs.existsSync(this.beforeHasher.hashesFilePath)) this.beforeHasher.load();
+		this.fileTransformer.sourcePath = this.sourcePath;
+		this.fileTransformer.targetPath = this.targetPath;
 
 		const syncItems = this.readSyncItems(1, this.sourcePath);
 		this.syncItemCount = syncItems.length;

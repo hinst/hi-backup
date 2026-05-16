@@ -2,7 +2,8 @@ import 'source-map-support/register';
 import fs from 'node:fs';
 import process from 'node:process';
 import chalk from 'chalk';
-import { FileTransformerGz } from './fileTransformerGz';
+import { EncryptionTransformer as EncryptionFileTransformer } from './encryptionTransformer';
+import { GzipFileTransformer } from './fileTransformerGz';
 import { FolderEncryption } from './folderEncryption';
 import { FolderHasher } from './folderHasher';
 import { FolderSync } from './folderSync';
@@ -25,15 +26,26 @@ async function main() {
 	}
 }
 
+const folderSyncCommands = [TaskCommand.MIRROR, TaskCommand.COMPRESS, TaskCommand.ENCRYPT];
+
 async function runTask(taskConfig: TaskConfig) {
-	if ([TaskCommand.MIRROR, TaskCommand.COMPRESS].includes(taskConfig.command)) {
+	if (TaskCommand.CHECK_HASH === taskConfig.command) {
+		await new FolderHasher(taskConfig.targetPath).fullCheck();
+		return;
+	}
+	if (folderSyncCommands.includes(taskConfig.command)) {
 		const mirror = new FolderSync(taskConfig.sourcePath, taskConfig.targetPath);
 		if (taskConfig.command === TaskCommand.COMPRESS)
-			mirror.fileTransformer = new FileTransformerGz();
+			mirror.fileTransformer = new GzipFileTransformer();
+		if (taskConfig.command === TaskCommand.ENCRYPT) {
+			if (!taskConfig.password?.length) throw new Error('Need password for encryption');
+			mirror.fileTransformer = new EncryptionFileTransformer(taskConfig.password);
+		}
 		await mirror.run();
 		console.log(mirror.stats);
-	} else if (TaskCommand.CHECK_HASH === taskConfig.command)
-		await new FolderHasher(taskConfig.targetPath).fullCheck();
+		return;
+	}
+	throw new Error('Unknown command: ' + taskConfig.command);
 }
 
 const _ = main();

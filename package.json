@@ -4,7 +4,7 @@
 	"main": "index.js",
 	"scripts": {
 		"build": "tsc",
-		"start": "node dist/main.js config/backups.json",
+		"start": "node dist/main.js config/encrypt.json",
 		"unpack": "node --env-file=config/unpack.env dist/main.js",
 		"test": "node dist/runTests.js"
 	},

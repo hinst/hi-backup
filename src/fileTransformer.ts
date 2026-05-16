@@ -2,6 +2,9 @@ import fs from 'node:fs';
 import { compareFiles, type FileKind } from './file';
 
 export class FileTransformer {
+	public sourcePath: string = '';
+	public targetPath: string = '';
+
 	/**	@param path Relative path from the source directory */
 	encodePath(path: string, _: FileKind) {
 		return path;

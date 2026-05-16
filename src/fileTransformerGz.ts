@@ -3,7 +3,7 @@ import { compareCompressedFile, compressFileGzip } from './compression';
 import { FileFormatError, FileKind } from './file';
 import { FileTransformer } from './fileTransformer';
 
-export class FileTransformerGz extends FileTransformer {
+export class GzipFileTransformer extends FileTransformer {
 	override encodePath(path: string, kind: FileKind) {
 		if (kind === FileKind.FILE) path += '.gz';
 		return path;

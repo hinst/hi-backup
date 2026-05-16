@@ -4,6 +4,7 @@ export enum TaskCommand {
 	MIRROR = 'mirror',
 	COMPRESS = 'compress',
 	CHECK_HASH = 'checkHash',
+	ENCRYPT = 'encrypt',
 }
 
 export class TaskConfig {
@@ -11,6 +12,7 @@ export class TaskConfig {
 		readonly command: TaskCommand,
 		readonly sourcePath: string,
 		readonly targetPath: string,
+		readonly password: string,
 	) {}
 
 	static createUndefined() {
