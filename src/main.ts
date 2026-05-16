@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import process from 'node:process';
 import chalk from 'chalk';
 import { EncryptionTransformer as EncryptionFileTransformer } from './encryptionTransformer';
-import { GzipFileTransformer } from './fileTransformerGz';
+import { GzipFileTransformer } from './gzipFileTransfromer';
 import { FolderEncryption } from './folderEncryption';
 import { FolderHasher } from './folderHasher';
 import { FolderSync } from './folderSync';
