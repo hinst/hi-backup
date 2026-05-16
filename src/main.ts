@@ -40,7 +40,7 @@ async function main() {
 			}
 		}
 		if (taskConfig.hashOnly) {
-			await new FolderHasher(taskConfig.targetPath).check();
+			await new FolderHasher(taskConfig.targetPath).fullCheck();
 		} else {
 			await mirror.run();
 			console.log(mirror.stats);

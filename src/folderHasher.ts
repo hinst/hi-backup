@@ -3,23 +3,47 @@ import chalk from 'chalk';
 import cliProgress from 'cli-progress';
 import { joinFilePath, readCountOfFiles, readFileHash } from './file';
 
+export enum HasherCheckResult {
+	NO_HASH,
+	NO_FILE,
+	MATCHED,
+	CHANGED,
+}
+
 export class FolderHasher {
 	static readonly FILE_NAME = '.hashes.json';
-	readonly hashes: Record<string, string> = {};
+	/** Format: mapping full file path to hash string */
+	private hashes: Record<string, string> = {};
+	/** Path to JSON file where all file hashes can be stored */
 	readonly hashesFilePath: string;
-	private progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
+	private readonly progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
 
 	constructor(readonly folderPath: string) {
 		this.hashesFilePath = joinFilePath(folderPath, FolderHasher.FILE_NAME);
 	}
 
-	private clear() {
-		for (const key of Object.keys(this.hashes)) delete this.hashes[key];
+	async readFile(filePath: string) {
+		this.hashes[filePath] = await readFileHash(filePath);
 	}
 
-	async generate() {
-		this.clear();
-		await this.readFolder(this.folderPath);
+	async checkFile(filePath: string): Promise<HasherCheckResult> {
+		if (!fs.existsSync(filePath)) return HasherCheckResult.NO_FILE;
+		const storedHash = this.hashes[filePath];
+		if (!storedHash) return HasherCheckResult.NO_HASH;
+		const hash = await readFileHash(filePath);
+		return storedHash === hash ? HasherCheckResult.MATCHED : HasherCheckResult.CHANGED;
+	}
+
+	load() {
+		const fileText = fs.readFileSync(this.hashesFilePath, 'utf8');
+		const storedHashes = JSON.parse(fileText) as Record<string, string>;
+		if (typeof storedHashes !== 'object')
+			throw new Error('Need object in file: ' + this.hashesFilePath);
+		this.hashes = storedHashes;
+		return storedHashes;
+	}
+
+	save() {
 		fs.writeFileSync(this.hashesFilePath, JSON.stringify(this.hashes, null, '\t'));
 	}
 
@@ -36,20 +60,16 @@ export class FolderHasher {
 			if (fileInfo.isDirectory()) {
 				await this.readFolder(filePath);
 			} else if (fileInfo.isFile()) {
-				this.hashes[filePath] = await readFileHash(filePath);
+				await this.readFile(filePath);
 				this.progressBar.increment();
 			}
 		}
 		if (folderPath === this.folderPath) this.progressBar.stop();
 	}
 
-	async check() {
-		this.clear();
-		if (!fs.existsSync(this.hashesFilePath)) return 0;
-		const fileText = fs.readFileSync(this.hashesFilePath, 'utf8');
-		const storedHashes = JSON.parse(fileText) as Record<string, string>;
-		if (typeof storedHashes !== 'object')
-			throw new Error('Need object in file: ' + this.hashesFilePath);
+	async fullCheck() {
+		const storedHashes = this.load();
+		this.hashes = {};
 		await this.readFolder(this.folderPath);
 
 		let deviationCount = 0;

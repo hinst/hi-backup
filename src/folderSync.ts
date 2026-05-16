@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import chalk from 'chalk';
 import { FileKind, joinFilePath } from './file';
 import { FileTransformer } from './fileTransformer';
-import { FolderHasher } from './folderHasher';
+import { FolderHasher, HasherCheckResult } from './folderHasher';
 import { FolderSyncStats } from './folderStats';
 import { FolderSyncItem } from './folderSyncItem';
 
@@ -12,28 +12,27 @@ export class FolderSync {
 	public readonly stats = new FolderSyncStats();
 
 	private readonly targetPaths: Set<string> = new Set();
+	/** Checking whether files got changed since the previous backup run */
+	private readonly beforeHasher: FolderHasher;
+	/** Saving hashes after the current backup run */
+	private readonly afterHasher: FolderHasher;
 	private syncItemIndex = 0;
 	private syncItemCount = 0;
 
 	constructor(
 		private readonly sourcePath: string,
 		private readonly targetPath: string,
-	) {}
+	) {
+		this.beforeHasher = new FolderHasher(targetPath);
+		this.afterHasher = new FolderHasher(targetPath);
+	}
 
 	async run() {
 		if (!fs.existsSync(this.sourcePath))
 			throw new Error('Source path does not exist: ' + this.sourcePath);
 		if (!fs.statSync(this.sourcePath).isDirectory())
 			throw new Error('Need directory: ' + this.sourcePath);
-
-		console.log('Checking hash in target folder');
-		if ((await new FolderHasher(this.targetPath).check()) !== 0) {
-			console.warn(
-				'Hash inconsistencies detected, exiting. Delete hashes file to proceed: ' +
-					FolderHasher.FILE_NAME,
-			);
-			return;
-		}
+		if (fs.existsSync(this.beforeHasher.hashesFilePath)) this.beforeHasher.load();
 
 		const syncItems = this.readSyncItems(1, this.sourcePath);
 		this.syncItemCount = syncItems.length;
@@ -53,10 +52,7 @@ export class FolderSync {
 		}
 		console.log('Sync backwards');
 		this.syncBackwards(this.targetPath);
-		console.log('Generate hashes');
-		await new FolderHasher(this.targetPath).generate();
-		console.log('Check hashes');
-		await new FolderHasher(this.targetPath).check();
+		this.afterHasher.save();
 	}
 
 	private readSyncItems(depth: number, sourcePath: string): FolderSyncItem[] {
@@ -114,12 +110,15 @@ export class FolderSync {
 
 	private async syncFile(sourcePath: string, targetPath: string) {
 		const exists = fs.existsSync(targetPath);
+		if ((await this.beforeHasher.checkFile(targetPath)) === HasherCheckResult.CHANGED)
+			console.warn(chalk.yellow('!h') + ' Hash changed: ' + sourcePath + ' -> ' + targetPath);
 		if (!exists) this.writeProgress(chalk.green('+f') + ' ' + sourcePath + ' -> ' + targetPath);
 		const changed = await this.fileTransformer.syncFile(sourcePath, targetPath);
 		if (exists && changed) {
 			this.writeProgress(chalk.cyan('~f') + ' ' + sourcePath + ' -> ' + targetPath);
 			++this.stats.updatedFiles;
 		}
+		await this.afterHasher.readFile(targetPath);
 		return changed;
 	}
 
@@ -154,7 +153,7 @@ export class FolderSync {
 	private deleteFile(sourceFilePath: string, targetFilePath: string) {
 		this.writeProgress(chalk.red('-f') + ' ' + sourceFilePath + ' -> ' + targetFilePath);
 		fs.unlinkSync(targetFilePath);
-		++this.stats.deletedFiles;
+		if (targetFilePath !== this.beforeHasher.hashesFilePath) ++this.stats.deletedFiles;
 	}
 
 	private deleteDirectory(sourcePath: string, targetPath: string) {
