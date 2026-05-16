@@ -181,7 +181,7 @@ export class FolderEncryption {
 		}
 		if (fs.existsSync(destinationPath)) {
 			try {
-				isEqual = this.encryption.compareFileWithEncrypted(sourcePath, destinationPath);
+				isEqual = this.encryption.compareEncryptedFile(sourcePath, destinationPath);
 			} catch (e) {
 				if (e instanceof FileFormatError) {
 					isEqual = false;

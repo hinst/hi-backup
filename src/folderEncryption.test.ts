@@ -5,12 +5,12 @@ import { compareSync } from 'dir-compare';
 import { FolderEncryption } from './folderEncryption';
 import { FolderSyncStats } from './folderStats';
 
-test(FolderEncryption.prototype.sync.name, function () {
+test(FolderEncryption.prototype.sync.name, async function () {
 	if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
 	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
 
 	let folderEncryption = new FolderEncryption('password', './test', './test.1');
-	folderEncryption.sync();
+	await folderEncryption.sync();
 	const expectedStats = Object.assign(new FolderSyncStats(), {
 		sourceFolders: 1,
 		newFolders: 2,
@@ -23,7 +23,7 @@ test(FolderEncryption.prototype.sync.name, function () {
 	assert.deepEqual(folderEncryption.stats, expectedStats);
 	expectedStats.newFolders = 0;
 	expectedStats.newFiles = 0;
-	folderEncryption.sync();
+	await folderEncryption.sync();
 	assert.deepEqual(folderEncryption.stats, expectedStats);
 
 	folderEncryption = new FolderEncryption('password', './test.1', './test.0');
@@ -37,15 +37,15 @@ test(FolderEncryption.prototype.sync.name, function () {
 	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
 });
 
-test(FolderEncryption.prototype.sync.name + '.addAndDelete', function () {
+test(FolderEncryption.prototype.sync.name + '.addAndDelete', async function () {
 	if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
 	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
 
 	const folderEncryption = new FolderEncryption('password', './test', './test.1');
-	folderEncryption.sync();
+	await folderEncryption.sync();
 
 	fs.writeFileSync('./test/new.txt', 'test');
-	folderEncryption.sync();
+	await folderEncryption.sync();
 	assert.equal(folderEncryption.stats.newFiles, 1);
 	assert.equal(folderEncryption.stats.deletedFiles, 0);
 	new FolderEncryption('password', './test.1', './test.0').unpack();
@@ -54,7 +54,7 @@ test(FolderEncryption.prototype.sync.name + '.addAndDelete', function () {
 	assert.equal(comparison.total, 6);
 
 	fs.unlinkSync('./test/new.txt');
-	folderEncryption.sync();
+	await folderEncryption.sync();
 	assert.equal(folderEncryption.stats.newFiles, 0);
 	assert.equal(folderEncryption.stats.deletedFiles, 1);
 	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
@@ -67,11 +67,11 @@ test(FolderEncryption.prototype.sync.name + '.addAndDelete', function () {
 	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
 });
 
-test(FolderEncryption.prototype.sync.name + '.wrongPassword', function () {
+test(FolderEncryption.prototype.sync.name + '.wrongPassword', async function () {
 	if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
 	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
 
-	new FolderEncryption('password', './test', './test.1').sync();
+	await new FolderEncryption('password', './test', './test.1').sync();
 	let error: AnyError;
 	try {
 		new FolderEncryption('password1', './test.1', './test.0').unpack();
@@ -84,15 +84,15 @@ test(FolderEncryption.prototype.sync.name + '.wrongPassword', function () {
 	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
 });
 
-test(FolderEncryption.prototype.sync.name + '.editFile', function () {
+test(FolderEncryption.prototype.sync.name + '.editFile', async function () {
 	if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
 	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
 
-	new FolderEncryption('password', './test', './test.1').sync();
+	await new FolderEncryption('password', './test', './test.1').sync();
 	const originalText = fs.readFileSync('./test/folder/text.txt', 'utf-8');
 	fs.writeFileSync('./test/folder/text.txt', 'changed text');
 	const folderEncryption = new FolderEncryption('password', './test', './test.1');
-	folderEncryption.sync();
+	await folderEncryption.sync();
 	assert.equal(folderEncryption.stats.updatedFiles, 1);
 	assert.equal(folderEncryption.stats.newFiles, 0);
 

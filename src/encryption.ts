@@ -102,7 +102,7 @@ export class Encryption {
 		return buffer.subarray(0, NOISE_SIZE);
 	}
 
-	compareFileWithEncrypted(sourceFilePath: string, destinationFilePath: string): boolean {
+	compareEncryptedFile(sourceFilePath: string, destinationFilePath: string): boolean {
 		const sourceFile = fs.openSync(sourceFilePath, 'r');
 		const destinationFile = fs.openSync(destinationFilePath, 'r');
 		const sourceBuffer = Buffer.alloc(CHUNK_SIZE);

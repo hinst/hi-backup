@@ -25,7 +25,7 @@ test(Encryption.prototype.encryptFile.name, function () {
 	new Encryption(password).encryptFile(filePath, encryptedFilePath);
 	function compare(plain: string, encrypted: string) {
 		try {
-			return new Encryption(password).compareFileWithEncrypted(plain, encrypted);
+			return new Encryption(password).compareEncryptedFile(plain, encrypted);
 		} catch (e) {
 			if (e instanceof FileFormatError) {
 				return false;
