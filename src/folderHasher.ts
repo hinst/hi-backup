@@ -12,7 +12,7 @@ export enum HasherCheckResult {
 
 export class FolderHasher {
 	static readonly FILE_NAME = '.hashes.json';
-	/** Format: mapping file path relative to folderPath to hash string */
+	/** Format: mapping relative file path to hash string */
 	private hashes: Record<string, string> = {};
 	/** Path to JSON file where all file hashes can be stored */
 	readonly folderPath: string;
