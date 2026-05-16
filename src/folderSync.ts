@@ -53,6 +53,7 @@ export class FolderSync {
 			++this.syncItemIndex;
 		}
 		console.log('Sync backwards');
+		this.syncItemIndex = -1;
 		this.syncBackwards(this.targetPath);
 		this.afterHasher.save();
 	}
@@ -90,8 +91,11 @@ export class FolderSync {
 	private async syncItem(syncItem: FolderSyncItem) {
 		const sourcePath = syncItem.path;
 		this.validateSyncItem(syncItem);
-		const sourceRelativePath = sourcePath.substring(this.sourcePath.length);
-		const targetRelativePath = this.fileTransformer.encodePath(sourceRelativePath, syncItem.kind);
+		const sourceRelativePath = sourcePath.substring(this.sourcePath.length + 1);
+		const targetRelativePath =
+			sourceRelativePath.length > 0
+				? this.fileTransformer.encodePath(sourceRelativePath, syncItem.kind)
+				: '';
 		const targetPath = joinFilePath(this.targetPath, targetRelativePath);
 		this.targetPaths.add(targetPath);
 		switch (syncItem.kind) {
@@ -137,7 +141,6 @@ export class FolderSync {
 	}
 
 	private syncBackwards(targetPath: string) {
-		this.syncItemIndex = -1;
 		const fileInfo = fs.statSync(targetPath);
 		if (fileInfo.isDirectory()) {
 			const entries = fs.readdirSync(targetPath, { withFileTypes: true });
@@ -146,7 +149,7 @@ export class FolderSync {
 				this.syncBackwards(itemPath);
 			}
 		}
-		if (!this.targetPaths.has(targetPath)) {
+		if (this.targetPath !== targetPath && !this.targetPaths.has(targetPath)) {
 			if (fileInfo.isDirectory()) this.deleteDirectory('', targetPath);
 			if (fileInfo.isFile()) this.deleteFile('', targetPath);
 		}
