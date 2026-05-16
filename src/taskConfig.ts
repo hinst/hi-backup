@@ -1,29 +1,29 @@
+import chalk from 'chalk';
+
 export enum TaskCommand {
 	MIRROR = 'mirror',
 	COMPRESS = 'compress',
+	CHECK_HASH = 'checkHash',
 }
 
 export class TaskConfig {
 	constructor(
+		readonly command: TaskCommand,
 		readonly sourcePath: string,
 		readonly targetPath: string,
-		readonly command: TaskCommand,
-		readonly hashOnly: boolean,
 	) {}
-
-	validate() {
-		if (!this.sourcePath?.length) throw new TaskConfigError('Need sourcePath');
-		if (!this.targetPath?.length) throw new TaskConfigError('Need targetPath');
-		if (!this.command?.length) throw new TaskConfigError('Need command');
-	}
 
 	static createUndefined() {
 		//@ts-ignore
 		return new TaskConfig();
 	}
 
-	toString() {
-		return this.sourcePath + ' ' + this.command + ' ' + this.targetPath;
+	toColoredString() {
+		const texts: string[] = [];
+		if (this.sourcePath) texts.push(chalk.green(this.sourcePath));
+		if (this.command) texts.push(chalk.bold(this.command));
+		if (this.targetPath) texts.push(chalk.cyan(this.targetPath));
+		return texts.join(' ');
 	}
 }
 

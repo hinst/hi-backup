@@ -13,40 +13,27 @@ async function main() {
 	if (!configFilePath?.length)
 		console.log('Please provide config file path as command line argument');
 	console.log('Using config: ' + configFilePath);
-	const tasks: TaskConfig[] = JSON.parse(fs.readFileSync(configFilePath).toString());
-	if (!tasks?.length) console.warn('There are no tasks');
-	for (const taskData of tasks) {
-		const taskConfig = Object.assign(TaskConfig.createUndefined(), taskData);
-		const completionText =
-			chalk.bold('DONE') +
-			' ' +
-			chalk.green(taskConfig.sourcePath) +
-			' ' +
-			chalk.bold(taskConfig.command) +
-			' ' +
-			chalk.cyan(taskConfig.targetPath);
-
+	const taskConfigs: TaskConfig[] = JSON.parse(fs.readFileSync(configFilePath).toString());
+	if (!taskConfigs?.length) console.warn('There are no tasks');
+	for (let i = 0; i < taskConfigs.length; ++i) {
+		const taskConfig = Object.assign(TaskConfig.createUndefined(), taskConfigs[i]);
+		console.log('[' + i + '] ' + taskConfig.toColoredString());
+		const completionText = chalk.bold('DONE') + ' ' + taskConfig.toColoredString();
 		console.time(completionText);
-		taskConfig.validate();
-		console.log(taskConfig);
-		const mirror = new FolderSync(taskConfig.sourcePath, taskConfig.targetPath);
-		switch (taskConfig.command) {
-			case TaskCommand.COMPRESS: {
-				mirror.fileTransformer = new FileTransformerGz();
-				break;
-			}
-			case TaskCommand.MIRROR: {
-				break;
-			}
-		}
-		if (taskConfig.hashOnly) {
-			await new FolderHasher(taskConfig.targetPath).fullCheck();
-		} else {
-			await mirror.run();
-			console.log(mirror.stats);
-		}
+		await runTask(taskConfig);
 		console.timeEnd(completionText);
 	}
+}
+
+async function runTask(taskConfig: TaskConfig) {
+	if ([TaskCommand.MIRROR, TaskCommand.COMPRESS].includes(taskConfig.command)) {
+		const mirror = new FolderSync(taskConfig.sourcePath, taskConfig.targetPath);
+		if (taskConfig.command === TaskCommand.COMPRESS)
+			mirror.fileTransformer = new FileTransformerGz();
+		await mirror.run();
+		console.log(mirror.stats);
+	} else if (TaskCommand.CHECK_HASH === taskConfig.command)
+		await new FolderHasher(taskConfig.targetPath).fullCheck();
 }
 
 const _ = main();
