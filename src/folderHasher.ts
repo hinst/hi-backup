@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import chalk from 'chalk';
 import cliProgress from 'cli-progress';
-import { joinFilePath, readCountOfFiles, readFileHash } from './file';
+import { joinFilePath, normalizeFilePath, readCountOfFiles, readFileHash } from './file';
 
 export enum HasherCheckResult {
 	NO_HASH,
@@ -12,23 +12,31 @@ export enum HasherCheckResult {
 
 export class FolderHasher {
 	static readonly FILE_NAME = '.hashes.json';
-	/** Format: mapping full file path to hash string */
+	/** Format: mapping file path relative to folderPath to hash string */
 	private hashes: Record<string, string> = {};
 	/** Path to JSON file where all file hashes can be stored */
+	readonly folderPath: string;
 	readonly hashesFilePath: string;
 	private readonly progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
 
-	constructor(readonly folderPath: string) {
+	constructor(folderPath: string) {
+		this.folderPath = normalizeFilePath(folderPath);
 		this.hashesFilePath = joinFilePath(folderPath, FolderHasher.FILE_NAME);
 	}
 
+	private toRelativePath(filePath: string): string {
+		filePath = normalizeFilePath(filePath);
+		if (!filePath.startsWith(this.folderPath)) throw new Error('File path is outside folder path');
+		return filePath.substring(this.folderPath.length + 1);
+	}
+
 	async readFile(filePath: string) {
-		this.hashes[filePath] = await readFileHash(filePath);
+		this.hashes[this.toRelativePath(filePath)] = await readFileHash(filePath);
 	}
 
 	async checkFile(filePath: string): Promise<HasherCheckResult> {
 		if (!fs.existsSync(filePath)) return HasherCheckResult.NO_FILE;
-		const storedHash = this.hashes[filePath];
+		const storedHash = this.hashes[this.toRelativePath(filePath)];
 		if (!storedHash) return HasherCheckResult.NO_HASH;
 		const hash = await readFileHash(filePath);
 		return storedHash === hash ? HasherCheckResult.MATCHED : HasherCheckResult.CHANGED;
