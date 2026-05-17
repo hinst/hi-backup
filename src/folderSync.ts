@@ -5,6 +5,7 @@ import { FileTransformer } from './fileTransformer';
 import { FolderHasher, HasherCheckResult } from './folderHasher';
 import { FolderSyncStats } from './folderStats';
 import { FolderSyncItem } from './folderSyncItem';
+import { FolderSyncItemReader } from './folderSyncItemReader';
 
 export class FolderSync {
 	public ignoredList: string[] = [];
@@ -37,7 +38,8 @@ export class FolderSync {
 			throw new Error('Need directory: ' + this.sourcePath);
 		if (fs.existsSync(this.beforeHasher.hashesFilePath)) this.beforeHasher.load();
 
-		const syncItems = this.readSyncItems(1, this.sourcePath);
+		const checkIgnored = this.checkIgnored.bind(this);
+		const syncItems = new FolderSyncItemReader(checkIgnored).run(1, this.sourcePath);
 		this.syncItemCount = syncItems.length;
 		console.log(
 			'Source [' +
@@ -56,30 +58,6 @@ export class FolderSync {
 		this.syncItemIndex = -1;
 		this.syncBackwards(this.targetPath);
 		this.afterHasher.save();
-	}
-
-	private readSyncItems(depth: number, sourcePath: string): FolderSyncItem[] {
-		const syncItems: FolderSyncItem[] = [];
-		const sourceFiles = fs.readdirSync(sourcePath, { withFileTypes: true });
-		for (const entry of sourceFiles) {
-			if (depth === 1 && this.checkIgnored(entry.name)) continue;
-			syncItems.push(FolderSyncItem.create(depth, entry));
-		}
-		for (const syncItem of syncItems.slice()) {
-			switch (syncItem.kind) {
-				case FileKind.DIRECTORY: {
-					++this.stats.sourceFolders;
-					break;
-				}
-				case FileKind.FILE: {
-					++this.stats.sourceFiles;
-					break;
-				}
-			}
-			if (syncItem.kind === FileKind.DIRECTORY)
-				syncItems.push(...this.readSyncItems(depth + 1, syncItem.path));
-		}
-		return syncItems;
 	}
 
 	private checkIgnored(fileName: string): boolean {
