@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import { Encryption } from './encryption';
-import { FileFormatError, FileKind, writeSizedBuffer } from './file';
+import { FileFormatError, FileKind, readSizedBuffer, writeSizedBuffer } from './file';
 import { FileTransformer } from './fileTransformer';
 
 export class EncryptionTransformer extends FileTransformer {
@@ -26,23 +26,8 @@ export class EncryptionTransformer extends FileTransformer {
 		return encodedPaths;
 	}
 
-	private encryptFileName(fileName: string): string {
-		const encryptedFileName = this.encryption.encryptText(
-			Encryption.createDefaultNoise(),
-			fileName,
-		);
-		const shortEncryptedName = Encryption.createHash()
-			.update(encryptedFileName)
-			.digest('hex')
-			.slice(0, EncryptionTransformer.ENCRYPTED_FILE_NAME_LENGTH);
-		return shortEncryptedName;
-	}
-
-	private saveFolderName(targetPath: string, fileName: string) {
-		const file = fs.openSync(targetPath, 'w');
-		const noise = Encryption.createNoise();
-		fs.writeSync(file, noise, 0, noise.length, null);
-		writeSizedBuffer(file, this.encryption.encryptText(noise, fileName));
+	override decodePath(path: string, _: FileKind): string {
+		const parts = path.split('/');
 	}
 
 	override async syncFile(sourcePath: string, targetPath: string): Promise<boolean> {
@@ -62,7 +47,39 @@ export class EncryptionTransformer extends FileTransformer {
 		return true;
 	}
 
-	override async unpackFile(sourcePath: string, targetPath: string) {
-		// TODO
+	override async unpackFile(sourcePath: string, targetPath: string) {}
+
+	private encryptFileName(fileName: string): string {
+		const encryptedFileName = this.encryption.encryptText(
+			Encryption.createDefaultNoise(),
+			fileName,
+		);
+		const shortEncryptedName = Encryption.createHash()
+			.update(encryptedFileName)
+			.digest('hex')
+			.slice(0, EncryptionTransformer.ENCRYPTED_FILE_NAME_LENGTH);
+		return shortEncryptedName;
+	}
+
+	private saveFolderName(targetPath: string, fileName: string) {
+		const file = fs.openSync(targetPath, 'w');
+		try {
+			const noise = Encryption.createNoise();
+			fs.writeSync(file, noise, 0, noise.length, null);
+			writeSizedBuffer(file, this.encryption.encryptText(noise, fileName));
+		} finally {
+			fs.closeSync(file);
+		}
+	}
+
+	private loadFolderName(sourcePath: string): string {
+		const file = fs.openSync(sourcePath, 'r');
+		try {
+			const noise = Encryption.readNoise(file);
+			const buffer = readSizedBuffer(file);
+			return this.encryption.decryptText(noise, buffer);
+		} finally {
+			fs.closeSync(file);
+		}
 	}
 }
