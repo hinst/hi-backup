@@ -2,16 +2,17 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import test from 'node:test';
 import { compareSync } from 'dir-compare';
+import { EncryptionTransformer } from './encryptionTransformer';
 import { FolderEncryption } from './folderEncryption';
 import { FolderSyncStats } from './folderStats';
 import { FolderSync } from './folderSync';
-import { EncryptionTransformer } from './encryptionTransformer';
+import { FolderUnpack } from './folderUnpack';
 
-test(FolderEncryption.prototype.sync.name, async function () {
+test(FolderSync.prototype.run.name, async function () {
 	if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
 	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
 
-	let folderEncryption = new FolderSync('./test', './test.1');
+	const folderEncryption = new FolderSync('./test', './test.1');
 	folderEncryption.fileTransformer = new EncryptionTransformer('password1');
 	await folderEncryption.run();
 	const expectedStats = Object.assign(new FolderSyncStats(), {
@@ -29,8 +30,8 @@ test(FolderEncryption.prototype.sync.name, async function () {
 	await folderEncryption.run();
 	assert.deepEqual(folderEncryption.stats, expectedStats);
 
-	folderEncryption = new FolderSync('./test.1', './test.0');
-	folderEncryption.unpack();
+	const folderUnpack = new FolderUnpack('./test.1', './test.0');
+	await folderUnpack.run();
 
 	const comparison = compareSync('./test', './test.0', { compareContent: true });
 	assert.equal(comparison.same, true);
