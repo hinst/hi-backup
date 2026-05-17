@@ -8,7 +8,8 @@
 	"linter": {
 		"rules": {
 			"style": {
-				"useTemplate": "off"
+				"useTemplate": "off",
+				"useImportType": "off"
 			},
 			"nursery": {
 				"noFloatingPromises": "error"
