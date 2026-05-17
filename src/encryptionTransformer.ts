@@ -61,4 +61,8 @@ export class EncryptionTransformer extends FileTransformer {
 		this.encryption.encryptFile(sourcePath, targetPath);
 		return true;
 	}
+
+	override async unpackFile(sourcePath: string, targetPath: string) {
+		// TODO
+	}
 }

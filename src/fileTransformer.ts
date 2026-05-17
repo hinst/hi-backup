@@ -37,6 +37,6 @@ export class FileTransformer {
 	}
 
 	async unpackFile(sourcePath: string, targetPath: string) {
-		return this.syncFile(sourcePath, targetPath);
+		fs.copyFileSync(sourcePath, targetPath);
 	}
 }

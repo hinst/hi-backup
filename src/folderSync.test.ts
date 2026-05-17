@@ -30,6 +30,7 @@ test(FolderSync.prototype.run.name, async function () {
 	assert.deepEqual(folderSync.stats, expectedStats);
 
 	const folderUnpack = new FolderUnpack('./test.1', './test.0');
+	folderUnpack.fileTransformer = new EncryptionTransformer('password1');
 	await folderUnpack.run();
 
 	const comparison = compareSync('./test', './test.0', { compareContent: true });
