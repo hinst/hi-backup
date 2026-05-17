@@ -21,6 +21,14 @@ export class FolderUnpack {
 	}
 
 	async run() {
+		this.stats = new FolderSyncStats();
+		this.fileTransformer.sourcePath = this.sourcePath;
+		this.fileTransformer.targetPath = this.targetPath;
+		if (fs.existsSync(this.sourcePath)) ++this.stats.sourceDirectories;
+		else throw new Error('Source path does not exist: ' + this.sourcePath);
+		if (!fs.statSync(this.sourcePath).isDirectory())
+			throw new Error('Need directory: ' + this.sourcePath);
+
 		const itemReader = new FolderSyncItemReader(FolderUnpack.checkIgnored);
 		const syncItems = itemReader.run(1, this.sourcePath);
 		this.stats.sourceDirectories = itemReader.directoryCount;
