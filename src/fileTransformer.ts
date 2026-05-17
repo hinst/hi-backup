@@ -7,13 +7,22 @@ export class FileTransformer {
 
 	/**
 		@param path Relative path from the source directory
-		@return A list of paths. The 0th item on the list must be the primary path.
+		@return List of relative paths. The 0th item on the list must be the primary path.
 			The rest of the paths can be used to store metadata in the target directory.
 			Returning them is only necessary to know that they exist and avoid deleting them as items
 			that do not exist in the source directory.
 	*/
 	encodePath(path: string, _: FileKind): string[] {
 		return [path];
+	}
+
+	/**
+		@param path Relative path, packed
+		@return Relative path, unpacked. Return empty string if the file should not be unpacked.
+			For example, metadata files should not be unpacked.
+	*/
+	decodePath(path: string, _: FileKind): string {
+		return path;
 	}
 
 	/** @returns true if file got changed */
@@ -25,5 +34,9 @@ export class FileTransformer {
 				else resolve(true);
 			});
 		});
+	}
+
+	async unpackFile(sourcePath: string, targetPath: string) {
+		return this.syncFile(sourcePath, targetPath);
 	}
 }
