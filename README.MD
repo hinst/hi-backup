@@ -11,7 +11,7 @@
 
 ## Build:
 
-* Runtime: Node.js 24
+* Runtime: Node.js 26
 * `npm install`
 * `npm run build`
 
