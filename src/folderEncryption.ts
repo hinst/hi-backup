@@ -9,7 +9,7 @@ const MAX_FILE_NAME_LENGTH = 32;
 const INFO_FILE_EXTENSION = '.info';
 
 export class FolderEncryption {
-	public readonly stats = new FolderSyncStats();
+	public stats = new FolderSyncStats();
 	private readonly encryption: Encryption;
 
 	constructor(
@@ -22,10 +22,12 @@ export class FolderEncryption {
 	}
 
 	sync() {
+		this.stats = new FolderSyncStats();
 		this.syncFolder(this.sourcePath, this.destinationPath);
 	}
 
 	unpack() {
+		this.stats = new FolderSyncStats();
 		this.unpackFolder(this.sourcePath, this.destinationPath);
 	}
 
