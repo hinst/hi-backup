@@ -26,8 +26,26 @@ export class EncryptionTransformer extends FileTransformer {
 		return encodedPaths;
 	}
 
-	override decodePath(path: string, _: FileKind): string {
+	override decodePath(path: string, kind: FileKind): string {
+		if (path.endsWith(EncryptionTransformer.INFO_FILE_EXTENSION)) return '';
 		const parts = path.split('/');
+		const decodedParts: string[] = [];
+		let encryptedPath = '';
+		for (let i = 0; i < parts.length; ++i) {
+			const encryptedName = parts[i];
+			const decodePart = kind === FileKind.DIRECTORY || i < parts.length - 1;
+			if (!decodePart) {
+				decodedParts.push(encryptedName);
+				continue;
+			}
+			encryptedPath = encryptedPath ? encryptedPath + '/' + encryptedName : encryptedName;
+			const infoRelativePath = encryptedPath + EncryptionTransformer.INFO_FILE_EXTENSION;
+			const infoPath = this.sourcePath
+				? this.sourcePath + '/' + infoRelativePath
+				: infoRelativePath;
+			decodedParts.push(this.loadFolderName(infoPath));
+		}
+		return decodedParts.join('/');
 	}
 
 	override async syncFile(sourcePath: string, targetPath: string): Promise<boolean> {
