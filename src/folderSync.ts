@@ -51,7 +51,7 @@ export class FolderSync {
 				' files=' +
 				this.stats.sourceFiles,
 		);
-		fs.mkdirSync(this.targetPath);
+		if (!fs.existsSync(this.targetPath)) fs.mkdirSync(this.targetPath);
 		for (const syncItem of syncItems) {
 			await this.syncItem(syncItem);
 			++this.syncItemIndex;
