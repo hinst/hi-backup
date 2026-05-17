@@ -13,16 +13,17 @@ export class EncryptionTransformer extends FileTransformer {
 		this.encryption = new Encryption(password);
 	}
 
-	override encodePath(path: string, kind: FileKind): string {
+	override encodePath(path: string, kind: FileKind): string[] {
 		const parts = path.split('/');
 		const encodedPath = parts.map((part) => this.encryptFileName(part)).join('/');
 		const encodedFileName = encodedPath[encodedPath.length - 1];
+		const encodedPaths = [encodedPath];
 		if (kind === FileKind.DIRECTORY) {
-			const infoFilePath =
-				this.targetPath + '/' + encodedPath + EncryptionTransformer.INFO_FILE_EXTENSION;
-			this.saveFolderName(infoFilePath, encodedFileName);
+			const infoFilePath = encodedPath + EncryptionTransformer.INFO_FILE_EXTENSION;
+			encodedPaths.push(infoFilePath);
+			this.saveFolderName(this.targetPath + '/' + infoFilePath, encodedFileName);
 		}
-		return encodedPath;
+		return encodedPaths;
 	}
 
 	private encryptFileName(fileName: string): string {

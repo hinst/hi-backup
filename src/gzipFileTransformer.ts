@@ -6,7 +6,7 @@ import { FileTransformer } from './fileTransformer';
 export class GzipFileTransformer extends FileTransformer {
 	override encodePath(path: string, kind: FileKind) {
 		if (kind === FileKind.FILE) path += '.gz';
-		return path;
+		return [path];
 	}
 
 	override async syncFile(sourcePath: string, targetPath: string): Promise<boolean> {

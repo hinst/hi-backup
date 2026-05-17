@@ -92,12 +92,13 @@ export class FolderSync {
 		const sourcePath = syncItem.path;
 		this.validateSyncItem(syncItem);
 		const sourceRelativePath = sourcePath.substring(this.sourcePath.length + 1);
-		const targetRelativePath =
-			sourceRelativePath.length > 0
-				? this.fileTransformer.encodePath(sourceRelativePath, syncItem.kind)
-				: '';
-		const targetPath = joinFilePath(this.targetPath, targetRelativePath);
-		this.targetPaths.add(targetPath);
+		const targetRelativePaths =
+			sourceRelativePath.length > 0 ? this.encodePath(sourceRelativePath, syncItem.kind) : [''];
+		const targetPaths = targetRelativePaths.map((targetRelativePath) =>
+			joinFilePath(this.targetPath, targetRelativePath),
+		);
+		for (const targetPath of targetPaths) this.targetPaths.add(targetPath);
+		const targetPath = targetPaths[0];
 		switch (syncItem.kind) {
 			case FileKind.DIRECTORY: {
 				if (fs.existsSync(targetPath) && fs.statSync(targetPath).isFile())
@@ -112,6 +113,12 @@ export class FolderSync {
 				break;
 			}
 		}
+	}
+
+	private encodePath(sourceRelativePath: string, kind: FileKind) {
+		const paths = this.fileTransformer.encodePath(sourceRelativePath, kind);
+		if (!paths?.length) throw new Error('Need at least one path');
+		return paths;
 	}
 
 	private async syncFile(sourcePath: string, targetPath: string) {

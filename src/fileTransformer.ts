@@ -5,9 +5,15 @@ export class FileTransformer {
 	public sourcePath: string = '';
 	public targetPath: string = '';
 
-	/**	@param path Relative path from the source directory */
-	encodePath(path: string, _: FileKind) {
-		return path;
+	/**
+		@param path Relative path from the source directory
+		@return A list of paths. The 0th item on the list must be the primary path.
+			The rest of the paths can be used to store metadata in the target directory.
+			Returning them is only necessary to know that they exist and avoid deleting them as items
+			that do not exist in the source directory.
+	*/
+	encodePath(path: string, _: FileKind): string[] {
+		return [path];
 	}
 
 	/** @returns true if file got changed */
