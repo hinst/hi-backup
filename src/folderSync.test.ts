@@ -23,7 +23,6 @@ test(FolderSync.prototype.run.name, async function () {
 	expectedStats.newFiles = 4;
 	expectedStats.updatedFiles = 0;
 	expectedStats.deletedFiles = 0;
-	console.log({ actualStats: folderSync.stats, expectedStats });
 	assert.deepEqual(folderSync.stats, expectedStats);
 	expectedStats.newDirectories = 0;
 	expectedStats.newFiles = 0;
