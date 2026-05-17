@@ -12,23 +12,23 @@ test(FolderSync.prototype.run.name, async function () {
 	if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
 	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
 
-	const folderEncryption = new FolderSync('./test', './test.1');
-	folderEncryption.fileTransformer = new EncryptionTransformer('password1');
-	await folderEncryption.run();
-	const expectedStats = Object.assign(new FolderSyncStats(), {
-		sourceFolders: 1,
-		newFolders: 2,
-		deletedFolders: 0,
-		sourceFiles: 4,
-		newFiles: 4,
-		updatedFiles: 0,
-		deletedFiles: 0,
-	});
-	assert.deepEqual(folderEncryption.stats, expectedStats);
-	expectedStats.newFolders = 0;
+	const folderSync = new FolderSync('./test', './test.1');
+	folderSync.fileTransformer = new EncryptionTransformer('password1');
+	await folderSync.run();
+	const expectedStats = new FolderSyncStats();
+	expectedStats.sourceDirectories = 1;
+	expectedStats.newDirectories = 2;
+	expectedStats.deletedDirectories = 0;
+	expectedStats.sourceFiles = 4;
+	expectedStats.newFiles = 4;
+	expectedStats.updatedFiles = 0;
+	expectedStats.deletedFiles = 0;
+	console.log({ actualStats: folderSync.stats, expectedStats });
+	assert.deepEqual(folderSync.stats, expectedStats);
+	expectedStats.newDirectories = 0;
 	expectedStats.newFiles = 0;
-	await folderEncryption.run();
-	assert.deepEqual(folderEncryption.stats, expectedStats);
+	await folderSync.run();
+	assert.deepEqual(folderSync.stats, expectedStats);
 
 	const folderUnpack = new FolderUnpack('./test.1', './test.0');
 	await folderUnpack.run();

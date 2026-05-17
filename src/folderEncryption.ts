@@ -87,7 +87,7 @@ export class FolderEncryption {
 		}
 		if (!fs.existsSync(destinationPath)) {
 			console.log(chalk.green('+d ') + destinationPath);
-			this.stats.newFolders++;
+			this.stats.newDirectories++;
 		}
 		fs.mkdirSync(destinationPath, { recursive: true });
 		const encryptedFileNames = new Set<string>();
@@ -156,7 +156,7 @@ export class FolderEncryption {
 				} else if (fileInfo.isDirectory()) {
 					const folderName = this.deleteEncryptedFolder(destinationFilePath);
 					console.log(chalk.red('-d ') + destinationFilePath + '\n\t' + folderName);
-					this.stats.deletedFolders++;
+					this.stats.deletedDirectories++;
 				}
 			}
 		}
@@ -179,7 +179,7 @@ export class FolderEncryption {
 		if (fs.existsSync(destinationPath) && fs.statSync(destinationPath).isDirectory()) {
 			const folderName = this.deleteEncryptedFolder(destinationPath);
 			console.log(chalk.red('-d ') + destinationPath + '\n\t' + folderName);
-			this.stats.deletedFolders++;
+			this.stats.deletedDirectories++;
 		}
 		if (fs.existsSync(destinationPath)) {
 			try {

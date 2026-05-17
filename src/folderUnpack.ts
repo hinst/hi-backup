@@ -1,5 +1,6 @@
 import fs from 'node:fs';
-import { FileKind, joinFilePath } from './file';
+import path from 'node:path';
+import { FileKind, joinFilePath, normalizeFilePath } from './file';
 import { FileTransformer } from './fileTransformer';
 import { FolderHasher } from './folderHasher';
 import { FolderSyncStats } from './folderStats';
@@ -15,8 +16,8 @@ export class FolderUnpack {
 	private syncItemCount = 0;
 
 	constructor(sourcePath: string, targetPath: string) {
-		this.sourcePath = sourcePath;
-		this.targetPath = targetPath;
+		this.sourcePath = normalizeFilePath(path.resolve(sourcePath));
+		this.targetPath = normalizeFilePath(path.resolve(targetPath));
 	}
 
 	async run() {

@@ -26,7 +26,10 @@ export class FolderHasher {
 
 	private toRelativePath(filePath: string): string {
 		filePath = normalizeFilePath(filePath);
-		if (!filePath.startsWith(this.folderPath)) throw new Error('File path is outside folder path');
+		if (!filePath.startsWith(this.folderPath))
+			throw new Error(
+				'File path is outside folder path: ' + filePath + ', must be inside: ' + this.folderPath,
+			);
 		return filePath.substring(this.folderPath.length + 1);
 	}
 
