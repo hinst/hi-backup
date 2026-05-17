@@ -1,4 +1,4 @@
-import type fs from 'node:fs';
+import fs from 'node:fs';
 import { FileKind, joinFilePath } from './file';
 
 export class FolderSyncItem {
@@ -8,7 +8,7 @@ export class FolderSyncItem {
 		readonly kind: FileKind,
 	) {}
 
-	public static create(depth: number, entry: fs.Dirent<string>) {
+	static create(depth: number, entry: fs.Dirent<string>) {
 		const sourcePath = joinFilePath(entry.parentPath, entry.name);
 		const fileKind = entry.isFile()
 			? FileKind.FILE
@@ -19,7 +19,18 @@ export class FolderSyncItem {
 		return new FolderSyncItem(depth, sourcePath, fileKind);
 	}
 
-	public toString() {
+	validate(sourcePath: string) {
+		if (!this.path.startsWith(sourcePath))
+			throw new Error(
+				'Folder sync logic error: source path outside main source path: ' +
+					sourcePath +
+					' -> ' +
+					this.path,
+			);
+		if (!fs.existsSync(this.path)) throw new Error('Source path does not exist: ' + this.path);
+	}
+
+	toString() {
 		const kind = this.kind === FileKind.DIRECTORY ? '[D] ' : '';
 		return kind + this.path;
 	}

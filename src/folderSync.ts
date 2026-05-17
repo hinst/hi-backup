@@ -9,7 +9,7 @@ import { FolderSyncItem } from './folderSyncItem';
 export class FolderSync {
 	public ignoredList: string[] = [];
 	public fileTransformer: FileTransformer = new FileTransformer();
-	public readonly stats = new FolderSyncStats();
+	public stats = new FolderSyncStats();
 
 	private readonly targetPaths: Set<string> = new Set();
 	/** Checking whether files got changed since the previous backup run */
@@ -28,13 +28,14 @@ export class FolderSync {
 	}
 
 	async run() {
+		this.stats = new FolderSyncStats();
+		this.fileTransformer.sourcePath = this.sourcePath;
+		this.fileTransformer.targetPath = this.targetPath;
 		if (!fs.existsSync(this.sourcePath))
 			throw new Error('Source path does not exist: ' + this.sourcePath);
 		if (!fs.statSync(this.sourcePath).isDirectory())
 			throw new Error('Need directory: ' + this.sourcePath);
 		if (fs.existsSync(this.beforeHasher.hashesFilePath)) this.beforeHasher.load();
-		this.fileTransformer.sourcePath = this.sourcePath;
-		this.fileTransformer.targetPath = this.targetPath;
 
 		const syncItems = this.readSyncItems(1, this.sourcePath);
 		this.syncItemCount = syncItems.length;
@@ -46,8 +47,7 @@ export class FolderSync {
 				' files=' +
 				this.stats.sourceFiles,
 		);
-		fs.mkdirSync(this.targetPath, { recursive: true });
-		await this.syncItem(new FolderSyncItem(0, this.sourcePath, FileKind.DIRECTORY));
+		fs.mkdirSync(this.targetPath);
 		for (const syncItem of syncItems) {
 			await this.syncItem(syncItem);
 			++this.syncItemIndex;
@@ -89,11 +89,10 @@ export class FolderSync {
 	}
 
 	private async syncItem(syncItem: FolderSyncItem) {
+		syncItem.validate(this.sourcePath);
 		const sourcePath = syncItem.path;
-		this.validateSyncItem(syncItem);
 		const sourceRelativePath = sourcePath.substring(this.sourcePath.length + 1);
-		const targetRelativePaths =
-			sourceRelativePath.length > 0 ? this.encodePath(sourceRelativePath, syncItem.kind) : [''];
+		const targetRelativePaths = this.encodePath(sourceRelativePath, syncItem.kind);
 		const targetPaths = targetRelativePaths.map((targetRelativePath) =>
 			joinFilePath(this.targetPath, targetRelativePath),
 		);
@@ -133,18 +132,6 @@ export class FolderSync {
 		}
 		await this.afterHasher.readFile(targetPath);
 		return changed;
-	}
-
-	private validateSyncItem(syncItem: FolderSyncItem) {
-		if (!syncItem.path.startsWith(this.sourcePath))
-			throw new Error(
-				'Folder sync logic error: source path outside main source path: ' +
-					this.sourcePath +
-					' -> ' +
-					syncItem.path,
-			);
-		if (!fs.existsSync(syncItem.path))
-			throw new Error('Source path does not exist: ' + syncItem.path);
 	}
 
 	private syncBackwards(targetPath: string) {
