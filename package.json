@@ -6,7 +6,7 @@
 		"build": "tsc",
 		"start": "node dist/main.js config/test.json",
 		"unpack": "node --env-file=config/unpack.env dist/main.js",
-		"test": "node dist/runTests.js"
+		"test": "npm run build && node --test --test-concurrency=1 **/*.test.js"
 	},
 	"keywords": [],
 	"author": "",
