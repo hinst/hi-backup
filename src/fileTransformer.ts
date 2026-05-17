@@ -25,7 +25,11 @@ export class FileTransformer {
 		return path;
 	}
 
-	/** @returns true if file got changed */
+	/**
+		@param sourcePath Absolute path
+		@param targetPath Absolute path
+		@returns true if file got changed
+	*/
 	async syncFile(sourcePath: string, targetPath: string): Promise<boolean> {
 		if (compareFiles(sourcePath, targetPath)) return false;
 		return new Promise((resolve, reject) => {
