@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import path from 'node:path';
 import { Encryption } from './encryption';
 import { FileFormatError, FileKind, readSizedBuffer, writeSizedBuffer } from './file';
 import { FileTransformer } from './fileTransformer';
@@ -16,12 +17,12 @@ export class EncryptionTransformer extends FileTransformer {
 	override encodePath(path: string, kind: FileKind): string[] {
 		const parts = path.split('/');
 		const encodedPath = parts.map((part) => this.encryptFileName(part)).join('/');
-		const encodedFileName = encodedPath[encodedPath.length - 1];
 		const encodedPaths = [encodedPath];
 		if (kind === FileKind.DIRECTORY) {
 			const infoFilePath = encodedPath + EncryptionTransformer.INFO_FILE_EXTENSION;
 			encodedPaths.push(infoFilePath);
-			this.saveFolderName(this.targetPath + '/' + infoFilePath, encodedFileName);
+			const encodedFolderName = parts[parts.length - 1];
+			this.saveFolderName(this.targetPath + '/' + infoFilePath, encodedFolderName);
 		}
 		return encodedPaths;
 	}
@@ -33,9 +34,11 @@ export class EncryptionTransformer extends FileTransformer {
 		let encryptedPath = '';
 		for (let i = 0; i < parts.length; ++i) {
 			const encryptedName = parts[i];
-			const decodePart = kind === FileKind.DIRECTORY || i < parts.length - 1;
-			if (!decodePart) {
-				decodedParts.push(encryptedName);
+			const isLast = i === parts.length - 1;
+			const isFile = kind === FileKind.FILE && isLast;
+			if (isFile) {
+				const fileName = this.encryption.decryptFileName(this.sourcePath + '/' + path);
+				decodedParts.push(fileName);
 				continue;
 			}
 			encryptedPath = encryptedPath ? encryptedPath + '/' + encryptedName : encryptedName;
@@ -65,7 +68,13 @@ export class EncryptionTransformer extends FileTransformer {
 		return true;
 	}
 
-	override async unpackFile(sourcePath: string, targetPath: string) {}
+	override async unpackFile(sourcePath: string, targetPath: string) {
+		if (fs.statSync(sourcePath).isDirectory()) fs.mkdirSync(targetPath);
+		if (fs.statSync(sourcePath).isFile()) {
+			targetPath = path.dirname(targetPath);
+			this.encryption.decryptFile(sourcePath, targetPath);
+		}
+	}
 
 	private encryptFileName(fileName: string): string {
 		const encryptedFileName = this.encryption.encryptText(

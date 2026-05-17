@@ -57,7 +57,7 @@ export class FolderUnpack {
 
 		await this.fileTransformer.unpackFile(sourcePath, targetPath);
 
-		this.writeProgress(syncItem.toString());
+		this.writeProgress(sourcePath + ' -> ' + targetPath);
 		this.stats.sourceFiles += syncItem.kind === FileKind.FILE ? 1 : 0;
 		this.stats.sourceDirectories += syncItem.kind === FileKind.DIRECTORY ? 1 : 0;
 	}
