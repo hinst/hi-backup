@@ -116,7 +116,7 @@ export class FolderEncryption {
 			if (fileInfo.isDirectory()) {
 				this.saveFolderName(destinationFilePath + INFO_FILE_EXTENSION, fileName);
 				this.syncFolder(sourceFilePath, destinationFilePath);
-				this.stats.sourceFolders++;
+				this.stats.sourceDirectories++;
 			}
 		}
 	}

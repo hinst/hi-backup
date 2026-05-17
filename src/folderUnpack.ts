@@ -20,13 +20,16 @@ export class FolderUnpack {
 	}
 
 	async run() {
-		const syncItems = new FolderSyncItemReader(FolderUnpack.checkIgnored).run(1, this.sourcePath);
+		const itemReader = new FolderSyncItemReader(FolderUnpack.checkIgnored);
+		const syncItems = itemReader.run(1, this.sourcePath);
+		this.stats.sourceDirectories = itemReader.directoryCount;
+		this.stats.sourceFiles = itemReader.fileCount;
 		this.syncItemCount = syncItems.length;
 		console.log(
 			'Source [' +
 				this.syncItemCount +
 				'] folders=' +
-				this.stats.sourceFolders +
+				this.stats.sourceDirectories +
 				' files=' +
 				this.stats.sourceFiles,
 		);
@@ -40,9 +43,14 @@ export class FolderUnpack {
 		const sourcePath = syncItem.path;
 		const sourceRelativePath = sourcePath.substring(this.sourcePath.length + 1);
 		const targetRelativePath = this.decodePath(sourceRelativePath, syncItem.kind);
-		if (targetRelativePath === '')
-			return;
+		if (targetRelativePath === '') return;
 		const targetPath = joinFilePath(this.targetPath, targetRelativePath);
+
+		await this.fileTransformer.unpackFile(sourcePath, targetPath);
+
+		this.writeProgress(syncItem.toString());
+		this.stats.sourceFiles += syncItem.kind === FileKind.FILE ? 1 : 0;
+		this.stats.sourceDirectories += syncItem.kind === FileKind.DIRECTORY ? 1 : 0;
 	}
 
 	private decodePath(sourceRelativePath: string, kind: FileKind) {
@@ -54,8 +62,7 @@ export class FolderUnpack {
 	}
 
 	private writeProgress(text: string) {
-		if (this.syncItemIndex !== -1)
-			text = '[' + (this.syncItemIndex + 1) + '/' + this.syncItemCount + '] ' + text;
+		text = '[' + (this.syncItemIndex + 1) + '/' + this.syncItemCount + '] ' + text;
 		console.log(text);
 	}
 }

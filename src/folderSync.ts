@@ -38,14 +38,16 @@ export class FolderSync {
 			throw new Error('Need directory: ' + this.sourcePath);
 		if (fs.existsSync(this.beforeHasher.hashesFilePath)) this.beforeHasher.load();
 
-		const checkIgnored = this.checkIgnored.bind(this);
-		const syncItems = new FolderSyncItemReader(checkIgnored).run(1, this.sourcePath);
+		const itemReader = new FolderSyncItemReader(this.checkIgnored.bind(this));
+		const syncItems = itemReader.run(1, this.sourcePath);
+		this.stats.sourceDirectories = itemReader.directoryCount;
+		this.stats.sourceFiles = itemReader.fileCount;
 		this.syncItemCount = syncItems.length;
 		console.log(
 			'Source [' +
 				this.syncItemCount +
-				'] folders=' +
-				this.stats.sourceFolders +
+				'] directories=' +
+				this.stats.sourceDirectories +
 				' files=' +
 				this.stats.sourceFiles,
 		);

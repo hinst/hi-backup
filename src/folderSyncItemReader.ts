@@ -4,7 +4,7 @@ import { FolderSyncItem } from './folderSyncItem';
 
 export class FolderSyncItemReader {
 	fileCount: number = 0;
-	folderCount: number = 0;
+	directoryCount: number = 0;
 
 	constructor(readonly checkIgnored: (fileName: string) => boolean) {}
 
@@ -18,7 +18,7 @@ export class FolderSyncItemReader {
 		for (const syncItem of syncItems.slice()) {
 			switch (syncItem.kind) {
 				case FileKind.DIRECTORY: {
-					++this.folderCount;
+					++this.directoryCount;
 					break;
 				}
 				case FileKind.FILE: {
