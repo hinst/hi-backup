@@ -16,13 +16,14 @@ export class FolderSync {
 	public fileTransformer: FileTransformer = new FileTransformer();
 	public stats = new FolderSyncStats();
 
-	private readonly targetPaths: Set<string> = new Set();
+	private readonly targetPaths: Map<string, string> = new Map();
 	/** Checking whether files got changed since the previous backup run */
 	private readonly beforeHasher: FolderHasher;
 	/** Saving hashes after the current backup run */
 	private readonly afterHasher: FolderHasher;
 	private syncItemIndex = 0;
 	private syncItemCount = 0;
+	private done = false;
 
 	constructor(sourcePath: string, targetPath: string) {
 		this.sourcePath = normalizeFilePath(path.resolve(sourcePath));
@@ -32,7 +33,8 @@ export class FolderSync {
 	}
 
 	async run() {
-		this.stats = new FolderSyncStats();
+		if (this.done) throw new Error('Repeated run is not supported');
+		else this.done = true;
 		this.fileTransformer.sourcePath = this.sourcePath;
 		this.fileTransformer.targetPath = this.targetPath;
 		if (fs.existsSync(this.sourcePath)) ++this.stats.sourceDirectories;
@@ -82,7 +84,7 @@ export class FolderSync {
 		const targetPaths = targetRelativePaths.map((targetRelativePath) =>
 			joinFilePath(this.targetPath, targetRelativePath),
 		);
-		for (const targetPath of targetPaths) this.targetPaths.add(targetPath);
+		for (const targetPath of targetPaths) this.targetPaths.set(targetPath, sourcePath);
 		const targetPath = targetPaths[0];
 		switch (syncItem.kind) {
 			case FileKind.DIRECTORY: {
