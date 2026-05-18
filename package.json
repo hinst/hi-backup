@@ -3,7 +3,7 @@
 	"version": "1.0.0",
 	"main": "index.js",
 	"scripts": {
-		"build": "tsc",
+		"build": "node clean.mjs && tsc",
 		"start": "node dist/main.js config/test.json",
 		"unpack": "node --env-file=config/unpack.env dist/main.js",
 		"test": "npm run build && node --test --test-concurrency=1 **/*.test.js"

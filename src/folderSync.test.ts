@@ -8,7 +8,7 @@ import { FolderSyncStats } from './folderStats';
 import { FolderSync } from './folderSync';
 import { FolderUnpack } from './folderUnpack';
 
-test(FolderSync.prototype.run.name, async function () {
+test(FolderSync.name, async function () {
 	if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
 	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
 
