@@ -46,24 +46,27 @@ test(FolderEncryption.prototype.sync.name + '.addAndDelete', async function () {
 	if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
 	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
 
-	const folderEncryption = new FolderEncryption('password', './test', './test.1');
-	await folderEncryption.sync();
+	const folderSync = new FolderSync('./test', './test.1');
+	folderSync.fileTransformer = new EncryptionTransformer('password');
+	await folderSync.run();
 
 	fs.writeFileSync('./test/new.txt', 'test');
-	await folderEncryption.sync();
-	assert.equal(folderEncryption.stats.newFiles, 1);
-	assert.equal(folderEncryption.stats.deletedFiles, 0);
-	new FolderEncryption('password', './test.1', './test.0').unpack();
+	await folderSync.run();
+	assert.equal(folderSync.stats.newFiles, 1);
+	assert.equal(folderSync.stats.deletedFiles, 0);
+	const folderUnpack = new FolderUnpack('./test.1', './test.0');
+	folderUnpack.fileTransformer = new EncryptionTransformer('password');
+	await folderUnpack.run();
 	let comparison = compareSync('./test', './test.0', { compareContent: true });
 	assert.equal(comparison.same, true);
 	assert.equal(comparison.total, 6);
 
 	fs.unlinkSync('./test/new.txt');
-	await folderEncryption.sync();
-	assert.equal(folderEncryption.stats.newFiles, 0);
-	assert.equal(folderEncryption.stats.deletedFiles, 1);
+	await folderSync.run();
+	assert.equal(folderSync.stats.newFiles, 0);
+	assert.equal(folderSync.stats.deletedFiles, 1);
 	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
-	new FolderEncryption('password', './test.1', './test.0').unpack();
+	await folderUnpack.run();
 	comparison = compareSync('./test', './test.0', { compareContent: true });
 	assert.equal(comparison.same, true);
 	assert.equal(comparison.total, 5);
@@ -76,10 +79,14 @@ test(FolderEncryption.prototype.sync.name + '.wrongPassword', async function () 
 	if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
 	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
 
-	await new FolderEncryption('password', './test', './test.1').sync();
+	const folderSync = new FolderSync('./test', './test.1');
+	folderSync.fileTransformer = new EncryptionTransformer('password');
+	await folderSync.run();
 	let error: AnyError;
 	try {
-		new FolderEncryption('password1', './test.1', './test.0').unpack();
+		const folderUnpack = new FolderUnpack('./test.1', './test.0');
+		folderUnpack.fileTransformer = new EncryptionTransformer('password1');
+		await folderUnpack.run();
 	} catch (e) {
 		error = e;
 	}
@@ -93,15 +100,18 @@ test(FolderEncryption.prototype.sync.name + '.editFile', async function () {
 	if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
 	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
 
-	await new FolderEncryption('password', './test', './test.1').sync();
+	const folderSync = new FolderSync('./test', './test.1');
+	folderSync.fileTransformer = new EncryptionTransformer('password');
+	await folderSync.run();
 	const originalText = fs.readFileSync('./test/folder/text.txt', 'utf-8');
 	fs.writeFileSync('./test/folder/text.txt', 'changed text');
-	const folderEncryption = new FolderEncryption('password', './test', './test.1');
-	await folderEncryption.sync();
-	assert.equal(folderEncryption.stats.updatedFiles, 1);
-	assert.equal(folderEncryption.stats.newFiles, 0);
+	await folderSync.run();
+	assert.equal(folderSync.stats.updatedFiles, 1);
+	assert.equal(folderSync.stats.newFiles, 0);
 
-	new FolderEncryption('password', './test.1', './test.0').unpack();
+	const folderUnpack = new FolderUnpack('./test.1', './test.0');
+	folderUnpack.fileTransformer = new EncryptionTransformer('password');
+	await folderUnpack.run();
 	assert.equal(true, compareSync('./test', './test.0', { compareContent: true }).same);
 
 	fs.writeFileSync('./test/folder/text.txt', originalText);
