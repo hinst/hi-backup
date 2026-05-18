@@ -54,14 +54,14 @@ test(FolderSync.name + '.addAndDelete', async function () {
 		// Initial sync
 		if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
 		const folderSync = new FolderSync('./test', './test.1');
-		folderSync.fileTransformer = new EncryptionTransformer('password');
+		folderSync.fileTransformer = new EncryptionTransformer('secret-password');
 		await folderSync.run();
 	}
 	{
 		// Adding file new.txt
 		fs.writeFileSync('./test/new.txt', 'test');
 		const folderSync = new FolderSync('./test', './test.1');
-		folderSync.fileTransformer = new EncryptionTransformer('password');
+		folderSync.fileTransformer = new EncryptionTransformer('secret-password');
 		await folderSync.run();
 		assert.equal(folderSync.stats.newFiles, 1);
 		assert.equal(folderSync.stats.deletedFiles, 0);
@@ -69,7 +69,7 @@ test(FolderSync.name + '.addAndDelete', async function () {
 		// Unpack and compare
 		if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
 		const folderUnpack = new FolderUnpack('./test.1', './test.0');
-		folderUnpack.fileTransformer = new EncryptionTransformer('password');
+		folderUnpack.fileTransformer = new EncryptionTransformer('secret-password');
 		await folderUnpack.run();
 		const comparison = compareSync('./test', './test.0', { compareContent: true });
 		assert.equal(comparison.same, true);
