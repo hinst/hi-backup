@@ -100,14 +100,14 @@ test(FolderSync.name + '.addAndDelete', async function () {
 
 test(FolderSync.name + '.wrongPassword', async function () {
 	if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
-	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
-
 	const folderSync = new FolderSync('./test', './test.1');
 	folderSync.fileTransformer = new EncryptionTransformer('password');
 	await folderSync.run();
+
+	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
+	const folderUnpack = new FolderUnpack('./test.1', './test.0');
 	let error: AnyError;
 	try {
-		const folderUnpack = new FolderUnpack('./test.1', './test.0');
 		folderUnpack.fileTransformer = new EncryptionTransformer('password1');
 		await folderUnpack.run();
 	} catch (e) {
@@ -147,6 +147,7 @@ test(FolderSync.name + '.editFile', async function () {
 	}
 	// Restore initial file state
 	fs.writeFileSync('./test/folder/text.txt', originalText);
+
 	if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
 	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
 });
