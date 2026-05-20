@@ -4,7 +4,6 @@ import process from 'node:process';
 import chalk from 'chalk';
 import { EncryptionTransformer as EncryptionFileTransformer } from 'src/files/transformers/encryptionTransformer';
 import { GzipFileTransformer } from 'src/files/transformers/gzipFileTransformer';
-import { FolderEncryption } from 'src/folderEncryption';
 import { FolderHasher } from 'src/folderHasher';
 import { FolderSync } from 'src/folderSync';
 import { TaskCommand, TaskConfig } from 'src/taskConfig';
@@ -49,30 +48,3 @@ async function runTask(taskConfig: TaskConfig) {
 }
 
 const _ = main();
-
-function oldMain() {
-	function requireEnvironmentString(key: string): string {
-		const text = process.env[key];
-		if (!text?.length) throw new Error('Required string is missing');
-		return text;
-	}
-
-	const sourceFolder = requireEnvironmentString('source');
-	const destinationFolder = requireEnvironmentString('destination');
-	const password = requireEnvironmentString('password');
-	const unpack = process.env.unpack === 'true';
-	const ignoredList = JSON.parse(process.env.ignoredList || '[]');
-
-	console.log((unpack ? 'Unpacking ' : 'Encrypting ') + sourceFolder + ' -> ' + destinationFolder);
-	const folderEncryption = new FolderEncryption(
-		password,
-		sourceFolder,
-		destinationFolder,
-		ignoredList,
-	);
-	console.time('done');
-	if (unpack) folderEncryption.unpack();
-	else folderEncryption.sync();
-	console.log(folderEncryption.stats);
-	console.timeEnd('done');
-}
