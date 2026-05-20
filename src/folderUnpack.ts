@@ -8,6 +8,7 @@ import { FolderSyncItem } from './folderSyncItem';
 import { FolderSyncItemReader } from './folderSyncItemReader';
 
 export class FolderUnpack {
+	progressLogEnabled = true;
 	public fileTransformer: FileTransformer = new FileTransformer();
 	public stats = new FolderSyncStats();
 	readonly sourcePath: string;
@@ -71,6 +72,8 @@ export class FolderUnpack {
 	}
 
 	private writeProgress(text: string) {
+		if (!this.progressLogEnabled)
+			return;
 		text = '[' + (this.syncItemIndex + 1) + '/' + this.syncItemCount + '] ' + text;
 		console.log(text);
 	}
