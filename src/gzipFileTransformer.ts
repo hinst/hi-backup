@@ -1,5 +1,6 @@
 import fs from 'node:fs';
-import { compareCompressedFile, compressFileGzip } from './compression';
+import zlib from 'node:zlib';
+import { compareCompressedFile, compressFileGzip, GZIP_FILE_EXTENSION } from './compression';
 import { FileFormatError, FileKind } from './file';
 import { FileTransformer } from './fileTransformer';
 
@@ -7,6 +8,12 @@ export class GzipFileTransformer extends FileTransformer {
 	override encodePath(path: string, kind: FileKind) {
 		if (kind === FileKind.FILE) path += '.gz';
 		return [path];
+	}
+
+	override decodePath(path: string, kind: FileKind): string {
+		if (kind === FileKind.FILE && path.endsWith(GZIP_FILE_EXTENSION))
+			return path.slice(0, -GZIP_FILE_EXTENSION.length);
+		return path;
 	}
 
 	override async syncFile(sourcePath: string, targetPath: string): Promise<boolean> {
@@ -24,5 +31,18 @@ export class GzipFileTransformer extends FileTransformer {
 		if (isEqual) return false;
 		await compressFileGzip(sourcePath, targetPath);
 		return true;
+	}
+
+	override async unpackFile(sourcePath: string, targetPath: string) {
+		const gunzip = zlib.createGunzip();
+		const input = fs.createReadStream(sourcePath);
+		const output = fs.createWriteStream(targetPath);
+		return new Promise<void>((resolve, reject) => {
+			input.pipe(gunzip).pipe(output);
+			output.on('finish', () => resolve());
+			output.on('error', reject);
+			input.on('error', reject);
+			gunzip.on('error', reject);
+		});
 	}
 }
