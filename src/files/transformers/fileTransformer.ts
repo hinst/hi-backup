@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import { compareFiles, type FileKind } from '../file';
+import { compareFiles, type FileKind } from 'src/files/file';
 
 export class FileTransformer {
 	public sourcePath: string = '';
@@ -41,9 +41,7 @@ export class FileTransformer {
 	}
 
 	async unpackFile(sourcePath: string, targetPath: string) {
-		if (fs.statSync(sourcePath).isFile())
-			fs.copyFileSync(sourcePath, targetPath);
-		if (fs.statSync(sourcePath).isDirectory())
-			fs.mkdirSync(targetPath);
+		if (fs.statSync(sourcePath).isFile()) fs.copyFileSync(sourcePath, targetPath);
+		if (fs.statSync(sourcePath).isDirectory()) fs.mkdirSync(targetPath);
 	}
 }

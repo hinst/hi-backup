@@ -1,8 +1,8 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import { compressBuffer, unpackBuffer } from './compression';
-import { FileFormatError, readSizedBuffer, writeSizedBuffer } from './file';
+import { compressBuffer, unpackBuffer } from 'src/files/compression';
+import { FileFormatError, readSizedBuffer, writeSizedBuffer } from 'src/files/file';
 
 const CHUNK_SIZE = 1024 * 1024;
 const ENCRYPTION_ALGORITHM = 'aes-256-cbc';

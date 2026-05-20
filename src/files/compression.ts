@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import zlib from 'node:zlib';
-import { FileFormatError } from './file';
-import { GzipChunkReader } from './gzipChunkReader';
+import { FileFormatError } from 'src/files/file';
+import { GzipChunkReader } from 'src/files/gzipChunkReader';
 
 const ZLIB_FORMAT_ERRORS = [zlib.constants.Z_DATA_ERROR, zlib.constants.Z_BUF_ERROR];
 

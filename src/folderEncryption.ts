@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import chalk from 'chalk';
-import { Encryption } from './files/encryption';
-import { FileFormatError, readSizedBuffer, writeSizedBuffer } from './files/file';
-import { FolderSyncStats } from './folderStats';
+import { Encryption } from 'src/files/encryption';
+import { FileFormatError, readSizedBuffer, writeSizedBuffer } from 'src/files/file';
+import { FolderSyncStats } from 'src/folderStats';
 
 const MAX_FILE_NAME_LENGTH = 32;
 const INFO_FILE_EXTENSION = '.info';

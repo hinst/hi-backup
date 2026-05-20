@@ -1,6 +1,6 @@
 import fs from 'node:fs';
-import { FileKind } from './files/file';
-import { FolderSyncItem } from './folderSyncItem';
+import { FileKind } from 'src/files/file';
+import { FolderSyncItem } from 'src/folderSyncItem';
 
 export class FolderSyncItemReader {
 	fileCount: number = 0;

@@ -4,9 +4,9 @@ import {
 	compressFileGzip,
 	GZIP_FILE_EXTENSION,
 	unpackFileGzip,
-} from '../compression';
-import { FileFormatError, FileKind } from '../file';
-import { FileTransformer } from './fileTransformer';
+} from 'src/files/compression';
+import { FileFormatError, FileKind } from 'src/files/file';
+import { FileTransformer } from 'src/files/transformers/fileTransformer';
 
 export class GzipFileTransformer extends FileTransformer {
 	override encodePath(path: string, kind: FileKind) {

@@ -1,8 +1,8 @@
 import assert from 'node:assert';
 import fs from 'node:fs';
 import test from 'node:test';
-import { Encryption } from './files/encryption';
-import { changeRandomByte, FileFormatError } from './files/file';
+import { Encryption } from 'src/files/encryption';
+import { changeRandomByte, FileFormatError } from 'src/files/file';
 
 test(Encryption.prototype.encrypt.name, function () {
 	const password = 'foo';

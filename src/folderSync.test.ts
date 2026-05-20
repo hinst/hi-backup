@@ -3,12 +3,12 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import test from 'node:test';
 import { compareSync } from 'dir-compare';
-import { EncryptionTransformer } from './files/transformers/encryptionTransformer';
-import { FileTransformer } from './files/transformers/fileTransformer';
-import { GzipFileTransformer } from './files/transformers/gzipFileTransformer';
-import { FolderSyncStats } from './folderStats';
-import { FolderSync } from './folderSync';
-import { FolderUnpack } from './folderUnpack';
+import { EncryptionTransformer } from 'src/files/transformers/encryptionTransformer';
+import { FileTransformer } from 'src/files/transformers/fileTransformer';
+import { GzipFileTransformer } from 'src/files/transformers/gzipFileTransformer';
+import { FolderSyncStats } from 'src/folderStats';
+import { FolderSync } from 'src/folderSync';
+import { FolderUnpack } from 'src/folderUnpack';
 
 class FolderSyncTest extends FolderSync {
 	progressLogEnabled = false;

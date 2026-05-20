@@ -1,12 +1,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import chalk from 'chalk';
-import { FileKind, joinFilePath, normalizeFilePath } from './files/file';
-import { FileTransformer } from './files/transformers/fileTransformer';
-import { FolderHasher, HasherCheckResult } from './folderHasher';
-import { FolderSyncStats } from './folderStats';
-import { FolderSyncItem } from './folderSyncItem';
-import { FolderSyncItemReader } from './folderSyncItemReader';
+import { FileKind, joinFilePath, normalizeFilePath } from 'src/files/file';
+import { FileTransformer } from 'src/files/transformers/fileTransformer';
+import { FolderHasher, HasherCheckResult } from 'src/folderHasher';
+import { FolderSyncStats } from 'src/folderStats';
+import { FolderSyncItem } from 'src/folderSyncItem';
+import { FolderSyncItemReader } from 'src/folderSyncItemReader';
 
 export class FolderSync {
 	ignoredList: string[] = [];
