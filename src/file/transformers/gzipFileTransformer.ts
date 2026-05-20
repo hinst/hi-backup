@@ -1,8 +1,12 @@
 import fs from 'node:fs';
-import zlib from 'node:zlib';
-import { compareCompressedFile, compressFileGzip, GZIP_FILE_EXTENSION, unpackFileGzip } from './compression';
-import { FileFormatError, FileKind } from './file';
-import { FileTransformer } from './fileTransformer';
+import {
+	compareCompressedFile,
+	compressFileGzip,
+	GZIP_FILE_EXTENSION,
+	unpackFileGzip,
+} from '../compression';
+import { FileFormatError, FileKind } from '../file';
+import { FileTransformer } from '../fileTransformer';
 
 export class GzipFileTransformer extends FileTransformer {
 	override encodePath(path: string, kind: FileKind) {
@@ -34,9 +38,7 @@ export class GzipFileTransformer extends FileTransformer {
 	}
 
 	override async unpackFile(sourcePath: string, targetPath: string) {
-		if (fs.statSync(sourcePath).isFile())
-			await unpackFileGzip(sourcePath, targetPath);
-		if (fs.statSync(sourcePath).isDirectory())
-			fs.mkdirSync(targetPath);
+		if (fs.statSync(sourcePath).isFile()) await unpackFileGzip(sourcePath, targetPath);
+		if (fs.statSync(sourcePath).isDirectory()) fs.mkdirSync(targetPath);
 	}
 }

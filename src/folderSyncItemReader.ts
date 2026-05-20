@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import { FileKind } from './file';
+import { FileKind } from './file/file';
 import { FolderSyncItem } from './folderSyncItem';
 
 export class FolderSyncItemReader {

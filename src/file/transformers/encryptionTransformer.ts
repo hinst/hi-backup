@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { Encryption } from './encryption';
-import { FileFormatError, FileKind, readSizedBuffer, writeSizedBuffer } from './file';
+import { Encryption } from '../encryption';
+import { FileFormatError, FileKind, readSizedBuffer, writeSizedBuffer } from '../file';
 import { FileTransformer } from './fileTransformer';
 
 export class EncryptionTransformer extends FileTransformer {

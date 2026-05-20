@@ -1,8 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import chalk from 'chalk';
-import { Encryption } from './encryption';
-import { FileFormatError, readSizedBuffer, writeSizedBuffer } from './file';
+import { Encryption } from './file/encryption';
+import { FileFormatError, readSizedBuffer, writeSizedBuffer } from './file/file';
 import { FolderSyncStats } from './folderStats';
 
 const MAX_FILE_NAME_LENGTH = 32;

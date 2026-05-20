@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { FileKind, joinFilePath, normalizeFilePath } from './file';
-import { FileTransformer } from './fileTransformer';
+import { FileKind, joinFilePath, normalizeFilePath } from './file/file';
+import { FileTransformer } from './file/transformers/fileTransformer';
 import { FolderHasher } from './folderHasher';
 import { FolderSyncStats } from './folderStats';
 import { FolderSyncItem } from './folderSyncItem';
@@ -72,8 +72,7 @@ export class FolderUnpack {
 	}
 
 	private writeProgress(text: string) {
-		if (!this.progressLogEnabled)
-			return;
+		if (!this.progressLogEnabled) return;
 		text = '[' + (this.syncItemIndex + 1) + '/' + this.syncItemCount + '] ' + text;
 		console.log(text);
 	}
