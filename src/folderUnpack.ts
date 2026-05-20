@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { FileKind, joinFilePath, normalizeFilePath } from './file/file';
-import { FileTransformer } from './file/transformers/fileTransformer';
+import { FileKind, joinFilePath, normalizeFilePath } from './files/file';
+import { FileTransformer } from './files/transformers/fileTransformer';
 import { FolderHasher } from './folderHasher';
 import { FolderSyncStats } from './folderStats';
 import { FolderSyncItem } from './folderSyncItem';

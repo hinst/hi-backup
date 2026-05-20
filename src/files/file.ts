@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import { INT32_SIZE, int32ToBuffer } from './array';
+import { INT32_SIZE, int32ToBuffer } from '../array';
 
 const MAX_BUFFER_SIZE = 100 * 1024 * 1024;
 

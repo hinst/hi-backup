@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import { compareFiles, type FileKind } from './file';
+import { compareFiles, type FileKind } from '../file';
 
 export class FileTransformer {
 	public sourcePath: string = '';

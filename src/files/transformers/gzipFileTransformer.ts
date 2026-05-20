@@ -6,7 +6,7 @@ import {
 	unpackFileGzip,
 } from '../compression';
 import { FileFormatError, FileKind } from '../file';
-import { FileTransformer } from '../fileTransformer';
+import { FileTransformer } from './fileTransformer';
 
 export class GzipFileTransformer extends FileTransformer {
 	override encodePath(path: string, kind: FileKind) {

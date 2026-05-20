@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import { FileKind, joinFilePath } from './file/file';
+import { FileKind, joinFilePath } from './files/file';
 
 export class FolderSyncItem {
 	constructor(
