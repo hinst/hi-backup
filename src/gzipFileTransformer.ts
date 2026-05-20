@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import zlib from 'node:zlib';
-import { compareCompressedFile, compressFileGzip, GZIP_FILE_EXTENSION } from './compression';
+import { compareCompressedFile, compressFileGzip, GZIP_FILE_EXTENSION, unpackFileGzip } from './compression';
 import { FileFormatError, FileKind } from './file';
 import { FileTransformer } from './fileTransformer';
 
@@ -34,15 +34,9 @@ export class GzipFileTransformer extends FileTransformer {
 	}
 
 	override async unpackFile(sourcePath: string, targetPath: string) {
-		const gunzip = zlib.createGunzip();
-		const input = fs.createReadStream(sourcePath);
-		const output = fs.createWriteStream(targetPath);
-		return new Promise<void>((resolve, reject) => {
-			input.pipe(gunzip).pipe(output);
-			output.on('finish', () => resolve());
-			output.on('error', reject);
-			input.on('error', reject);
-			gunzip.on('error', reject);
-		});
+		if (fs.statSync(sourcePath).isFile())
+			await unpackFileGzip(sourcePath, targetPath);
+		if (fs.statSync(sourcePath).isDirectory())
+			fs.mkdirSync(targetPath);
 	}
 }

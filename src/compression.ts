@@ -34,6 +34,19 @@ export async function compressFileGzip(sourcePath: string, targetPath: string): 
 	});
 }
 
+export async function unpackFileGzip(sourcePath: string, targetPath: string): Promise<void> {
+	const gunzip = zlib.createGunzip();
+	const input = fs.createReadStream(sourcePath);
+	const output = fs.createWriteStream(targetPath);
+	return new Promise<void>((resolve, reject) => {
+		input.pipe(gunzip).pipe(output);
+		output.on('finish', () => resolve());
+		output.on('error', reject);
+		input.on('error', reject);
+		gunzip.on('error', reject);
+	});
+}
+
 export async function compareCompressedFile(
 	sourcePath: string,
 	compressedPath: string,
