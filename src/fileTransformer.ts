@@ -41,6 +41,9 @@ export class FileTransformer {
 	}
 
 	async unpackFile(sourcePath: string, targetPath: string) {
-		fs.copyFileSync(sourcePath, targetPath);
+		if (fs.statSync(sourcePath).isFile())
+			fs.copyFileSync(sourcePath, targetPath);
+		if (fs.statSync(sourcePath).isDirectory())
+			fs.mkdirSync(targetPath);
 	}
 }

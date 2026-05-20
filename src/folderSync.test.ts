@@ -145,7 +145,7 @@ function registerFolderSyncTests(suiteName: string, makeTransformer: () => FileT
 
 registerFolderSyncTests('FolderSync.Encryption', () => new EncryptionTransformer('password11'));
 registerFolderSyncTests('FolderSync.Gzip', () => new GzipFileTransformer());
-// registerFolderSyncTests('FolderSync.Plain', () => new FileTransformer());
+registerFolderSyncTests('FolderSync.Plain', () => new FileTransformer());
 
 test(FolderSyncTest.name + '.wrongPassword', async function () {
 	if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
