@@ -2,12 +2,12 @@ import 'source-map-support/register';
 import fs from 'node:fs';
 import process from 'node:process';
 import chalk from 'chalk';
-import { EncryptionTransformer as EncryptionFileTransformer } from './files/transformers/encryptionTransformer';
-import { GzipFileTransformer } from './files/transformers/gzipFileTransformer';
-import { FolderEncryption } from './folderEncryption';
-import { FolderHasher } from './folderHasher';
-import { FolderSync } from './folderSync';
-import { TaskCommand, TaskConfig } from './taskConfig';
+import { EncryptionTransformer as EncryptionFileTransformer } from 'src/files/transformers/encryptionTransformer';
+import { GzipFileTransformer } from 'src/files/transformers/gzipFileTransformer';
+import { FolderEncryption } from 'src/folderEncryption';
+import { FolderHasher } from 'src/folderHasher';
+import { FolderSync } from 'src/folderSync';
+import { TaskCommand, TaskConfig } from 'src/taskConfig';
 
 async function main() {
 	const configFilePath = process.argv[2];
