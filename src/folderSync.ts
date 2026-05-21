@@ -81,7 +81,8 @@ export class FolderSync {
 		syncItem.validate(this.sourcePath);
 		const sourcePath = syncItem.path;
 		const sourceRelativePath = sourcePath.substring(this.sourcePath.length + 1);
-		const targetRelativePaths = this.encodePath(sourceRelativePath, syncItem.kind);
+		const targetRelativePaths = this.fileTransformer.encodePath(sourceRelativePath, syncItem.kind);
+		if (!targetRelativePaths?.length) return;
 		const targetPaths = targetRelativePaths.map((targetRelativePath) =>
 			joinFilePath(this.targetPath, targetRelativePath),
 		);
@@ -101,12 +102,6 @@ export class FolderSync {
 				break;
 			}
 		}
-	}
-
-	private encodePath(sourceRelativePath: string, kind: FileKind) {
-		const paths = this.fileTransformer.encodePath(sourceRelativePath, kind);
-		if (!paths?.length) throw new Error('Need at least one path');
-		return paths;
 	}
 
 	private async syncFile(sourcePath: string, targetPath: string) {
