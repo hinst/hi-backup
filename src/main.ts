@@ -11,7 +11,7 @@ import { TaskCommand, TaskConfig } from 'src/taskConfig';
 async function main() {
 	const configFilePath = process.argv[2];
 	if (!configFilePath?.length)
-		console.log('Please provide config file path as command line argument');
+		return console.warn('Please provide config file path as command line argument');
 	console.log('Using config: ' + configFilePath);
 	const taskConfigs: TaskConfig[] = JSON.parse(fs.readFileSync(configFilePath).toString());
 	if (!taskConfigs?.length) console.warn('There are no tasks');
