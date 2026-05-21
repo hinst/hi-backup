@@ -48,11 +48,11 @@ export async function unpackFileGzip(sourcePath: string, targetPath: string): Pr
 }
 
 export async function compareCompressedFile(
-	sourcePath: string,
-	compressedPath: string,
+	plainFilePath: string,
+	compressedFilePath: string,
 ): Promise<boolean> {
-	const reader = new GzipChunkReader(compressedPath);
-	const sourceFile = fs.openSync(sourcePath, 'r');
+	const reader = new GzipChunkReader(compressedFilePath);
+	const sourceFile = fs.openSync(plainFilePath, 'r');
 	let equal = true;
 	try {
 		await reader.read((unpackedChunk) => {
