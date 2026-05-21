@@ -102,34 +102,40 @@ export class Encryption {
 		return buffer.subarray(0, NOISE_SIZE);
 	}
 
-	compareEncryptedFile(sourceFilePath: string, destinationFilePath: string): boolean {
-		const sourceFile = fs.openSync(sourceFilePath, 'r');
-		const destinationFile = fs.openSync(destinationFilePath, 'r');
-		const sourceBuffer = Buffer.alloc(CHUNK_SIZE);
-		const noise = Encryption.readNoise(destinationFile);
-		this.decrypt(noise, readSizedBuffer(destinationFile));
+	compareEncryptedFile(plainFilePath: string, encryptedFilePath: string): boolean {
 		let isConsistent = true;
-		while (isConsistent) {
-			const sourceSize = fs.readSync(sourceFile, sourceBuffer, 0, CHUNK_SIZE, null);
-			if (!sourceSize) {
-				const lastBuffer = readSizedBuffer(destinationFile);
-				if (lastBuffer.length !== 0) isConsistent = false;
-				break;
+		const sourceFile = fs.openSync(plainFilePath, 'r');
+		try {
+			const encryptedFile = fs.openSync(encryptedFilePath, 'r');
+			try {
+				const sourceBuffer = Buffer.alloc(CHUNK_SIZE);
+				const noise = Encryption.readNoise(encryptedFile);
+				this.decrypt(noise, readSizedBuffer(encryptedFile)); // Skip file name
+				while (isConsistent) {
+					const sourceSize = fs.readSync(sourceFile, sourceBuffer, 0, CHUNK_SIZE, null);
+					if (!sourceSize) {
+						const lastBuffer = readSizedBuffer(encryptedFile);
+						if (lastBuffer.length !== 0) isConsistent = false;
+						break;
+					}
+					const sourceBytes = sourceBuffer.subarray(0, sourceSize);
+					const encryptedBytes = readSizedBuffer(encryptedFile);
+					const decryptedBytes = this.decrypt(noise, encryptedBytes);
+					if (sourceBytes.length !== decryptedBytes.length) {
+						isConsistent = false;
+						break;
+					}
+					if (sourceBytes.compare(decryptedBytes) !== 0) {
+						isConsistent = false;
+						break;
+					}
+				}
+			} finally {
+				fs.closeSync(encryptedFile);
 			}
-			const sourceBytes = sourceBuffer.subarray(0, sourceSize);
-			const encryptedBytes = readSizedBuffer(destinationFile);
-			const decryptedBytes = this.decrypt(noise, encryptedBytes);
-			if (sourceBytes.length !== decryptedBytes.length) {
-				isConsistent = false;
-				break;
-			}
-			if (sourceBytes.compare(decryptedBytes) !== 0) {
-				isConsistent = false;
-				break;
-			}
+		} finally {
+			fs.closeSync(sourceFile);
 		}
-		fs.closeSync(sourceFile);
-		fs.closeSync(destinationFile);
 		return isConsistent;
 	}
 
