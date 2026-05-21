@@ -14,10 +14,10 @@ export class GzipFileTransformer extends FileTransformer {
 		return [path];
 	}
 
-	override decodePath(path: string, kind: FileKind): string {
+	override decodePath(path: string, kind: FileKind): string[] {
 		if (kind === FileKind.FILE && path.endsWith(GZIP_FILE_EXTENSION))
-			return path.slice(0, -GZIP_FILE_EXTENSION.length);
-		return path;
+			return [path.slice(0, -GZIP_FILE_EXTENSION.length)];
+		return [path];
 	}
 
 	override async syncFile(sourcePath: string, targetPath: string): Promise<boolean> {
@@ -37,8 +37,20 @@ export class GzipFileTransformer extends FileTransformer {
 		return true;
 	}
 
-	override async unpackFile(sourcePath: string, targetPath: string) {
-		if (fs.statSync(sourcePath).isFile()) await unpackFileGzip(sourcePath, targetPath);
-		if (fs.statSync(sourcePath).isDirectory()) fs.mkdirSync(targetPath);
+	override async unpackFile(sourcePath: string, targetPath: string): Promise<boolean> {
+		if (!fs.existsSync(targetPath)) {
+			await unpackFileGzip(sourcePath, targetPath);
+			return true;
+		}
+		let isEqual = false;
+		try {
+			isEqual = await compareCompressedFile(targetPath, sourcePath);
+		} catch (e) {
+			if (e instanceof FileFormatError) isEqual = false;
+			else throw e;
+		}
+		if (isEqual) return false;
+		await unpackFileGzip(sourcePath, targetPath);
+		return true;
 	}
 }

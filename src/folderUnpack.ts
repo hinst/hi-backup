@@ -52,11 +52,20 @@ export class FolderUnpack {
 		syncItem.validate(this.sourcePath);
 		const sourcePath = syncItem.path;
 		const sourceRelativePath = sourcePath.substring(this.sourcePath.length + 1);
-		const targetRelativePath = this.decodePath(sourceRelativePath, syncItem.kind);
-		if (targetRelativePath === '') return;
-		const targetPath = joinFilePath(this.targetPath, targetRelativePath);
+		const targetRelativePaths = this.decodePath(sourceRelativePath, syncItem.kind);
+		if (!targetRelativePaths.length) return;
+		const targetPath = joinFilePath(this.targetPath, targetRelativePaths[0]);
 
-		await this.fileTransformer.unpackFile(sourcePath, targetPath);
+		switch (syncItem.kind) {
+			case FileKind.FILE: {
+				await this.fileTransformer.unpackFile(sourcePath, targetPath);
+				break;
+			}
+			case FileKind.DIRECTORY: {
+				fs.mkdirSync(targetPath);
+				break;
+			}
+		}
 
 		this.writeProgress(sourcePath + ' -> ' + targetPath);
 		this.stats.sourceFiles += syncItem.kind === FileKind.FILE ? 1 : 0;

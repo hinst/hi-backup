@@ -1,5 +1,4 @@
 import fs from 'node:fs';
-import path from 'node:path';
 import { Encryption } from 'src/files/encryption';
 import { FileFormatError, FileKind, readSizedBuffer, writeSizedBuffer } from 'src/files/file';
 import { FileTransformer } from 'src/files/transformers/fileTransformer';
@@ -27,8 +26,8 @@ export class EncryptionTransformer extends FileTransformer {
 		return encodedPaths;
 	}
 
-	override decodePath(path: string, kind: FileKind): string {
-		if (path.endsWith(EncryptionTransformer.INFO_FILE_EXTENSION)) return '';
+	override decodePath(path: string, kind: FileKind): string[] {
+		if (path.endsWith(EncryptionTransformer.INFO_FILE_EXTENSION)) return [];
 		const parts = path.split('/');
 		const decodedParts: string[] = [];
 		let encryptedPath = '';
@@ -48,7 +47,7 @@ export class EncryptionTransformer extends FileTransformer {
 				: infoRelativePath;
 			decodedParts.push(this.loadFolderName(infoPath));
 		}
-		return decodedParts.join('/');
+		return [decodedParts.join('/')];
 	}
 
 	override async syncFile(sourcePath: string, targetPath: string): Promise<boolean> {
@@ -68,12 +67,21 @@ export class EncryptionTransformer extends FileTransformer {
 		return true;
 	}
 
-	override async unpackFile(sourcePath: string, targetPath: string) {
-		if (fs.statSync(sourcePath).isDirectory()) fs.mkdirSync(targetPath);
-		if (fs.statSync(sourcePath).isFile()) {
-			targetPath = path.dirname(targetPath);
+	override async unpackFile(sourcePath: string, targetPath: string): Promise<boolean> {
+		if (!fs.existsSync(targetPath)) {
 			this.encryption.decryptFile(sourcePath, targetPath);
+			return true;
 		}
+		let isEqual = false;
+		try {
+			isEqual = this.encryption.compareEncryptedFile(targetPath, sourcePath);
+		} catch (e) {
+			if (e instanceof FileFormatError) isEqual = false;
+			else throw e;
+		}
+		if (isEqual) return false;
+		this.encryption.decryptFile(sourcePath, targetPath);
+		return true;
 	}
 
 	private encryptFileName(fileName: string): string {
