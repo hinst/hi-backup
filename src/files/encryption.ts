@@ -5,7 +5,7 @@ import { compressBuffer, unpackBuffer } from 'src/files/compression';
 import { FileFormatError, readSizedBuffer, writeSizedBuffer } from 'src/files/file';
 
 const CHUNK_SIZE = 1024 * 1024;
-const ENCRYPTION_ALGORITHM = 'aes-256-cbc';
+const ENCRYPTION_ALGORITHM = 'aes-256-cbc'; // TODO use aes-256-gcm
 const HASHING_ALGORITHM = 'sha256';
 const NOISE_SIZE = 16;
 
@@ -69,12 +69,17 @@ export class Encryption {
 		fs.closeSync(outputFile);
 	}
 
-	decryptFile(sourceFilePath: string, destinationFolderPath: string) {
+	decryptFile(sourceFilePath: string, targetFilePath: string) {
+		const targetFileName = path.basename(targetFilePath);
 		const sourceFile = fs.openSync(sourceFilePath, 'r');
 		const noise = Encryption.readNoise(sourceFile);
-		const fileName = this.decryptText(noise, readSizedBuffer(sourceFile));
-		const destinationFilePath = path.join(destinationFolderPath, fileName);
-		const destinationFile = fs.openSync(destinationFilePath, 'w');
+		const storedFileName = this.decryptText(noise, readSizedBuffer(sourceFile));
+		if (storedFileName !== targetFileName)
+			throw new Error(
+				'Target path points to a file with a different name. ' +
+					'This validation error likely indicates a mistake in decryption logic',
+			);
+		const destinationFile = fs.openSync(targetFilePath, 'w');
 		while (true) {
 			const encryptedBytes = readSizedBuffer(sourceFile);
 			if (!encryptedBytes.length) break;
