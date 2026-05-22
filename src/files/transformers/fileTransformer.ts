@@ -2,9 +2,23 @@ import fs from 'node:fs';
 import { compareFiles, type FileKind } from 'src/files/file';
 
 export class FileTransformer {
-	public sourcePath: string = '';
-	public targetPath: string = '';
-	public isReverse: boolean = false;
+	private _sourcePath: string = '';
+	get sourcePath() {
+		return this._sourcePath;
+	}
+	set sourcePath(value: string) {
+		this._sourcePath = value;
+	}
+
+	private _targetPath: string = '';
+	get targetPath() {
+		return this._targetPath;
+	}
+	set targetPath(value: string) {
+		this._targetPath = value;
+	}
+
+	isReverse: boolean = false;
 
 	/**
 		@param path Relative path from the source directory
