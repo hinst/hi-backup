@@ -4,6 +4,7 @@ import { compareFiles, type FileKind } from 'src/files/file';
 export class FileTransformer {
 	public sourcePath: string = '';
 	public targetPath: string = '';
+	public isReverse: boolean = false;
 
 	/**
 		@param path Relative path from the source directory

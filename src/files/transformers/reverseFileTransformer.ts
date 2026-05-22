@@ -4,6 +4,7 @@ import { FileTransformer } from './fileTransformer';
 export class ReverseFileTransformer extends FileTransformer {
 	constructor(private readonly transformer: FileTransformer) {
 		super();
+		this.isReverse = true;
 	}
 
 	override encodePath(path: string, kind: FileKind): string[] {
