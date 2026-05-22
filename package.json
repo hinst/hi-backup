@@ -4,7 +4,7 @@
 	"main": "index.js",
 	"scripts": {
 		"build": "node clean.mjs && tsc && tsc-alias",
-		"start": "node dist/main.js config/test.json",
+		"start": "node dist/main.js config/backups.json",
 		"unpack": "node --env-file=config/unpack.env dist/main.js",
 		"test": "npm run build && node --test --test-concurrency=1 **/*.test.js"
 	},
@@ -13,7 +13,7 @@
 	"license": "ISC",
 	"description": "",
 	"devDependencies": {
-		"@biomejs/biome": "^2.4.11",
+		"@biomejs/biome": "^2.4.12",
 		"@types/cli-progress": "^3.11.6",
 		"@types/lodash": "^4.17.24",
 		"@types/node": "^24.10.4",
