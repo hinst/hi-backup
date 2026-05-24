@@ -19,6 +19,7 @@ export class FolderHasher {
 	readonly folderPath: string;
 	readonly hashesFilePath: string;
 	private readonly progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
+	deviationCount = 0;
 
 	constructor(folderPath: string) {
 		this.folderPath = normalizeFilePath(folderPath);
@@ -58,12 +59,14 @@ export class FolderHasher {
 				console.warn(
 					chalk.yellow('!h') + ' Hash changed: ' + sourceFilePath + ' -> ' + targetFilePath,
 				);
+				++this.deviationCount;
 				break;
 			}
 			case HasherCheckResult.NO_HASH: {
 				console.warn(
 					chalk.yellow('?h') + ' Hash record missing: ' + sourceFilePath + ' -> ' + targetFilePath,
 				);
+				++this.deviationCount;
 				break;
 			}
 		}
@@ -112,7 +115,7 @@ export class FolderHasher {
 		this.hashes = {};
 		await this.readFolder(this.folderPath);
 
-		let deviationCount = 0;
+		this.deviationCount = 0;
 		let totalCount = 0;
 		const allPaths = new Set<string>([...Object.keys(storedHashes), ...Object.keys(this.hashes)]);
 		for (const filePath of [...allPaths].sort()) {
@@ -121,29 +124,29 @@ export class FolderHasher {
 			const actualHash = this.hashes[filePath];
 			if (expectedHash === undefined) {
 				console.log(chalk.yellow('[!]') + ' Unexpected file: ' + filePath);
-				++deviationCount;
+				++this.deviationCount;
 				continue;
 			}
 			if (actualHash === undefined) {
 				console.log(chalk.yellow('[!]') + ' Missing file: ' + filePath);
-				++deviationCount;
+				++this.deviationCount;
 				continue;
 			}
 			if (actualHash !== expectedHash) {
 				console.log(chalk.yellow('[!]') + ' Wrong hash: ' + filePath);
-				++deviationCount;
+				++this.deviationCount;
 			}
 		}
 
-		if (deviationCount > 0)
+		if (this.deviationCount > 0)
 			console.log(
 				'Hash check: deviated ' +
-					chalk.yellow(deviationCount) +
+					chalk.yellow(this.deviationCount) +
 					' of total ' +
 					totalCount +
 					' files',
 			);
 		else console.log('Hash is ' + chalk.green('OK') + ' for files [' + totalCount + ']');
-		return deviationCount;
+		return this.deviationCount;
 	}
 }
