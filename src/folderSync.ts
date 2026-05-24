@@ -3,7 +3,7 @@ import path from 'node:path';
 import chalk from 'chalk';
 import { FileKind, joinFilePath, normalizeFilePath } from 'src/files/file';
 import { FileTransformer } from 'src/files/transformers/fileTransformer';
-import { FolderHasher, HasherCheckResult } from 'src/folderHasher';
+import { FolderHasher } from 'src/folderHasher';
 import { FolderSyncStats } from 'src/folderStats';
 import { FolderSyncItem } from 'src/folderSyncItem';
 import { FolderSyncItemReader } from 'src/folderSyncItemReader';
@@ -18,10 +18,12 @@ export class FolderSync {
 	public stats = new FolderSyncStats();
 
 	private readonly targetPaths: Map<string, string> = new Map();
-	/** Checking whether files got changed since the previous backup run */
+	/** Checking whether target files got changed since the previous backup run */
 	private readonly beforeHasher: FolderHasher;
-	/** Saving hashes after the current backup run */
+	/** Saving hashes for target files after the current backup run */
 	private readonly afterHasher: FolderHasher;
+	/** Checking whether source files got changed since the previous backup run */
+	private readonly sourceHasher: FolderHasher;
 	private syncItemIndex = 0;
 	private syncItemCount = 0;
 	private done = false;
@@ -31,6 +33,7 @@ export class FolderSync {
 		this.targetPath = normalizeFilePath(path.resolve(targetPath));
 		this.beforeHasher = new FolderHasher(this.targetPath);
 		this.afterHasher = new FolderHasher(this.targetPath);
+		this.sourceHasher = new FolderHasher(this.sourcePath);
 	}
 
 	async run() {
@@ -42,7 +45,8 @@ export class FolderSync {
 		else throw new Error('Source path does not exist: ' + this.sourcePath);
 		if (!fs.statSync(this.sourcePath).isDirectory())
 			throw new Error('Need directory: ' + this.sourcePath);
-		if (fs.existsSync(this.beforeHasher.hashesFilePath)) this.beforeHasher.load();
+		this.sourceHasher.loadOptional();
+		this.beforeHasher.loadOptional();
 
 		const itemReader = new FolderSyncItemReader(this.checkIgnored.bind(this));
 		const syncItems = itemReader.run(1, this.sourcePath);
@@ -97,6 +101,7 @@ export class FolderSync {
 				break;
 			}
 			case FileKind.FILE: {
+				await this.sourceHasher.checkAndWarn(sourcePath, sourcePath, targetPath);
 				if (fs.existsSync(targetPath) && fs.statSync(targetPath).isDirectory())
 					this.deleteDirectory(sourcePath, targetPath);
 				await this.syncFile(sourcePath, targetPath);
@@ -107,8 +112,7 @@ export class FolderSync {
 
 	private async syncFile(sourcePath: string, targetPath: string) {
 		const exists = fs.existsSync(targetPath);
-		if ((await this.beforeHasher.checkFile(targetPath)) === HasherCheckResult.CHANGED)
-			console.warn(chalk.yellow('!h') + ' Hash changed: ' + sourcePath + ' -> ' + targetPath);
+		await this.beforeHasher.checkAndWarn(targetPath, sourcePath, targetPath);
 		if (!exists) {
 			this.writeProgress(chalk.green('+f') + ' ' + sourcePath + ' -> ' + targetPath);
 			++this.stats.newFiles;

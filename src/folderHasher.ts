@@ -45,6 +45,29 @@ export class FolderHasher {
 		return storedHash === hash ? HasherCheckResult.MATCHED : HasherCheckResult.CHANGED;
 	}
 
+	async checkAndWarn(filePath: string, sourceFilePath: string, targetFilePath: string) {
+		if (![sourceFilePath, targetFilePath].includes(filePath))
+			throw new Error(
+				'Folder hasher logic error: path mismatch ' +
+					JSON.stringify({ filePath, sourceFilePath, targetFilePath }),
+			);
+		if (Object.keys(this.hashes).length === 0) return;
+		switch (await this.checkFile(filePath)) {
+			case HasherCheckResult.CHANGED: {
+				console.warn(
+					chalk.yellow('!h') + ' Hash changed: ' + sourceFilePath + ' -> ' + targetFilePath,
+				);
+				break;
+			}
+			case HasherCheckResult.NO_HASH: {
+				console.warn(
+					chalk.yellow('?h') + ' Hash record missing: ' + sourceFilePath + ' -> ' + targetFilePath,
+				);
+				break;
+			}
+		}
+	}
+
 	load() {
 		const fileText = fs.readFileSync(this.hashesFilePath, 'utf8');
 		const storedHashes = JSON.parse(fileText) as Record<string, string>;
@@ -52,6 +75,11 @@ export class FolderHasher {
 			throw new Error('Need object in file: ' + this.hashesFilePath);
 		this.hashes = storedHashes;
 		return storedHashes;
+	}
+
+	loadOptional() {
+		if (fs.existsSync(this.hashesFilePath) && fs.statSync(this.hashesFilePath).isFile())
+			this.load();
 	}
 
 	save() {
