@@ -167,7 +167,29 @@ test(FolderSyncTest.name + '.wrongPassword', async function () {
 	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
 });
 
-test(FolderSync.name + '.hashChange', async function () {
+test(FolderSync.name + '.hashChangeUnpack', async function () {
+	{
+		// Initial sync
+		if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
+		const folderSync = new FolderSyncTest('./test', './test.1');
+		await folderSync.run();
+	}
+
+	// Edit file
+	fs.writeFileSync('./test.1/text.txt', 'changed text');
+
+	// Repeated sync
+	const folderSync = new FolderSyncTest('./test', './test.1');
+	await folderSync.run();
+
+	assert.equal(folderSync.deviationCount, 1);
+
+	if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
+	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
+});
+
+
+test(FolderSync.name + '.hashChangeUnpack', async function () {
 	{
 		// Initial sync
 		if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
