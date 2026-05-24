@@ -6,15 +6,11 @@ import { compareSync } from 'dir-compare';
 import { EncryptionTransformer } from 'src/files/transformers/encryptionTransformer';
 import { FileTransformer } from 'src/files/transformers/fileTransformer';
 import { GzipFileTransformer } from 'src/files/transformers/gzipFileTransformer';
+import { ReverseFileTransformer } from 'src/files/transformers/reverseFileTransformer';
 import { FolderSyncStats } from 'src/folderStats';
 import { FolderSync } from 'src/folderSync';
-import { FolderUnpack } from 'src/folderUnpack';
 
 class FolderSyncTest extends FolderSync {
-	progressLogEnabled = false;
-}
-
-class FolderUnpackTest extends FolderUnpack {
 	progressLogEnabled = false;
 }
 
@@ -48,8 +44,8 @@ function registerFolderSyncTests(suiteName: string, makeTransformer: () => FileT
 		{
 			// Unpack and compare
 			if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
-			const folderUnpack = new FolderUnpackTest('./test.1', './test.0');
-			folderUnpack.fileTransformer = makeTransformer();
+			const folderUnpack = new FolderSyncTest('./test.1', './test.0');
+			folderUnpack.fileTransformer = new ReverseFileTransformer(makeTransformer());
 			await folderUnpack.run();
 			const comparison = compareSync('./test', './test.0', { compareContent: true });
 			assert.equal(comparison.same, true);
@@ -79,8 +75,8 @@ function registerFolderSyncTests(suiteName: string, makeTransformer: () => FileT
 
 			// Unpack and compare
 			if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
-			const folderUnpack = new FolderUnpackTest('./test.1', './test.0');
-			folderUnpack.fileTransformer = makeTransformer();
+			const folderUnpack = new FolderSyncTest('./test.1', './test.0');
+			folderUnpack.fileTransformer = new ReverseFileTransformer(makeTransformer());
 			await folderUnpack.run();
 			const comparison = compareSync('./test', './test.0', { compareContent: true });
 			assert.equal(comparison.same, true);
@@ -98,8 +94,8 @@ function registerFolderSyncTests(suiteName: string, makeTransformer: () => FileT
 
 			// Unpack and compare
 			if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
-			const folderUnpack = new FolderUnpackTest('./test.1', './test.0');
-			folderUnpack.fileTransformer = makeTransformer();
+			const folderUnpack = new FolderSyncTest('./test.1', './test.0');
+			folderUnpack.fileTransformer = new ReverseFileTransformer(makeTransformer());
 			await folderUnpack.run();
 			const comparison = compareSync('./test', './test.0', { compareContent: true });
 			assert.equal(comparison.same, true);
@@ -130,8 +126,8 @@ function registerFolderSyncTests(suiteName: string, makeTransformer: () => FileT
 		{
 			// Unpack
 			if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
-			const folderUnpack = new FolderUnpackTest('./test.1', './test.0');
-			folderUnpack.fileTransformer = makeTransformer();
+			const folderUnpack = new FolderSyncTest('./test.1', './test.0');
+			folderUnpack.fileTransformer = new ReverseFileTransformer(makeTransformer());
 			await folderUnpack.run();
 			assert.equal(true, compareSync('./test', './test.0', { compareContent: true }).same);
 		}
@@ -143,9 +139,9 @@ function registerFolderSyncTests(suiteName: string, makeTransformer: () => FileT
 	});
 }
 
-registerFolderSyncTests('FolderSync.Encryption', () => new EncryptionTransformer('password11'));
-registerFolderSyncTests('FolderSync.Gzip', () => new GzipFileTransformer());
 registerFolderSyncTests('FolderSync.Plain', () => new FileTransformer());
+registerFolderSyncTests('FolderSync.Gzip', () => new GzipFileTransformer());
+registerFolderSyncTests('FolderSync.Encryption', () => new EncryptionTransformer('password11'));
 
 test(FolderSyncTest.name + '.wrongPassword', async function () {
 	if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
@@ -154,10 +150,10 @@ test(FolderSyncTest.name + '.wrongPassword', async function () {
 	await folderSync.run();
 
 	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
-	const folderUnpack = new FolderUnpackTest('./test.1', './test.0');
+	const folderUnpack = new FolderSyncTest('./test.1', './test.0');
+	folderUnpack.fileTransformer = new ReverseFileTransformer(new EncryptionTransformer('password1'));
 	let error: AnyError;
 	try {
-		folderUnpack.fileTransformer = new EncryptionTransformer('password1');
 		await folderUnpack.run();
 	} catch (e) {
 		error = e;

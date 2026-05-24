@@ -68,13 +68,14 @@ export class FolderSync {
 		console.log('Sync backwards');
 		this.syncItemIndex = -1;
 		this.syncBackwards(this.targetPath);
-		this.afterHasher.save();
+		if (!this.fileTransformer.isReverse) this.afterHasher.save();
 	}
 
 	private checkIgnored(fileName: string): boolean {
-		return this.ignoredList.some(
-			(ignoredFile) => ignoredFile.toLowerCase().trim() === fileName.toLowerCase().trim(),
-		);
+		fileName = fileName.toLowerCase();
+		if (this.fileTransformer.isReverse && fileName === FolderHasher.FILE_NAME.toLowerCase())
+			return true;
+		return this.ignoredList.some((ignoredFile) => fileName === ignoredFile.toLowerCase());
 	}
 
 	private async syncItem(syncItem: FolderSyncItem) {
@@ -98,7 +99,7 @@ export class FolderSync {
 			case FileKind.FILE: {
 				if (fs.existsSync(targetPath) && fs.statSync(targetPath).isDirectory())
 					this.deleteDirectory(sourcePath, targetPath);
-				await this.syncFile(syncItem.path, targetPath);
+				await this.syncFile(sourcePath, targetPath);
 				break;
 			}
 		}

@@ -5,7 +5,7 @@ import { compressBuffer, unpackBuffer } from 'src/files/compression';
 import { FileFormatError, readSizedBuffer, writeSizedBuffer } from 'src/files/file';
 
 const CHUNK_SIZE = 1024 * 1024;
-const ENCRYPTION_ALGORITHM = 'aes-256-cbc'; // TODO use aes-256-gcm
+const ENCRYPTION_ALGORITHM = 'aes-256-cbc'; // Using aes-256-gcm currently does not work: need auth tag
 const HASHING_ALGORITHM = 'sha256';
 const NOISE_SIZE = 16;
 
