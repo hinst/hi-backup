@@ -31,6 +31,7 @@ function registerFolderSyncTests(suiteName: string, makeTransformer: () => FileT
 			expectedStats.updatedFiles = 0;
 			expectedStats.deletedFiles = 0;
 			assert.deepEqual(folderSync.stats, expectedStats);
+			assert.equal(folderSync.deviationCount, 0);
 		}
 		{
 			// Repeated sync: nothing should change, expecting 0 updated files
@@ -40,6 +41,7 @@ function registerFolderSyncTests(suiteName: string, makeTransformer: () => FileT
 			expectedStats.newDirectories = 0;
 			expectedStats.newFiles = 0;
 			assert.deepEqual(folderSync.stats, expectedStats);
+			assert.equal(folderSync.deviationCount, 0);
 		}
 		{
 			// Unpack and compare
@@ -50,6 +52,7 @@ function registerFolderSyncTests(suiteName: string, makeTransformer: () => FileT
 			const comparison = compareSync('./test', './test.0', { compareContent: true });
 			assert.equal(comparison.same, true);
 			assert.equal(comparison.total, 5);
+			assert.equal(folderUnpack.deviationCount, 0);
 		}
 		// Cleanup
 		if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
@@ -187,7 +190,6 @@ test(FolderSync.name + '.hashChangeUnpack', async function () {
 	if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
 	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
 });
-
 
 test(FolderSync.name + '.hashChangeUnpack', async function () {
 	{
