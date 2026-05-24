@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import chalk from 'chalk';
 import cliProgress from 'cli-progress';
 import { joinFilePath, normalizeFilePath, readCountOfFiles, readFileHash } from 'src/files/file';
+import { hasKeys } from './typeScript';
 
 export enum HasherCheckResult {
 	NO_HASH,
@@ -51,7 +52,7 @@ export class FolderHasher {
 				'Folder hasher logic error: path mismatch ' +
 					JSON.stringify({ filePath, sourceFilePath, targetFilePath }),
 			);
-		if (Object.keys(this.hashes).length === 0) return;
+		if (!hasKeys(this.hashes)) return;
 		switch (await this.checkFile(filePath)) {
 			case HasherCheckResult.CHANGED: {
 				console.warn(
