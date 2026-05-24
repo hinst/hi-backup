@@ -36,6 +36,10 @@ export class FolderSync {
 		this.sourceHasher = new FolderHasher(this.sourcePath);
 	}
 
+	get deviationCount() {
+		return this.beforeHasher.deviationCount + this.sourceHasher.deviationCount;
+	}
+
 	async run() {
 		if (this.done) throw new Error('Repeated run is not supported');
 		else this.done = true;

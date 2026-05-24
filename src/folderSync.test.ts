@@ -139,9 +139,12 @@ function registerFolderSyncTests(suiteName: string, makeTransformer: () => FileT
 	});
 }
 
-registerFolderSyncTests('FolderSync.Plain', () => new FileTransformer());
-registerFolderSyncTests('FolderSync.Gzip', () => new GzipFileTransformer());
-registerFolderSyncTests('FolderSync.Encryption', () => new EncryptionTransformer('password11'));
+registerFolderSyncTests(FolderSync.name + '.Plain', () => new FileTransformer());
+registerFolderSyncTests(FolderSync.name + '.Gzip', () => new GzipFileTransformer());
+registerFolderSyncTests(
+	FolderSync.name + '.Encryption',
+	() => new EncryptionTransformer('password11'),
+);
 
 test(FolderSyncTest.name + '.wrongPassword', async function () {
 	if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
@@ -159,6 +162,29 @@ test(FolderSyncTest.name + '.wrongPassword', async function () {
 		error = e;
 	}
 	assert.equal(error.reason, 'bad decrypt');
+
+	if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
+	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
+});
+
+test(FolderSync.name + '.hashChange', async function () {
+	{
+		// Initial sync
+		if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
+		const folderSync = new FolderSyncTest('./test', './test.1');
+		await folderSync.run();
+	}
+
+	// Edit file
+	fs.writeFileSync('./test.1/text.txt', 'changed text');
+
+	// Unpack
+	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
+	const folderUnpack = new FolderSyncTest('./test.1', './test.0');
+	folderUnpack.fileTransformer = new ReverseFileTransformer(folderUnpack.fileTransformer);
+	await folderUnpack.run();
+
+	assert.equal(folderUnpack.deviationCount, 1);
 
 	if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
 	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
