@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import chalk from 'chalk';
 import cliProgress from 'cli-progress';
 import { joinFilePath, normalizeFilePath, readCountOfFiles, readFileHash } from 'src/files/file';
-import { hasKeys } from './typeScript';
+import { hasKeys } from './object';
 
 export enum HasherCheckResult {
 	NO_HASH,
