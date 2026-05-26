@@ -88,7 +88,6 @@ function registerFolderSyncTests(suiteName: string, makeTransformer: () => FileT
 		{
 			// Removing file new.txt
 			fs.unlinkSync('./test/new.txt');
-			console.log('deleted ./test/new.txt');
 			const folderSync = new FolderSyncTest('./test', './test.1');
 			folderSync.fileTransformer = makeTransformer();
 			await folderSync.run();
@@ -170,7 +169,7 @@ test(FolderSyncTest.name + '.wrongPassword', async function () {
 	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
 });
 
-test(FolderSync.name + '.hashChangeUnpack', async function () {
+test(FolderSync.name + '.hashChange', async function () {
 	{
 		// Initial sync
 		if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });

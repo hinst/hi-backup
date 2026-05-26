@@ -57,14 +57,15 @@ export class FolderSync {
 		this.stats.sourceDirectories = itemReader.directoryCount;
 		this.stats.sourceFiles = itemReader.fileCount;
 		this.syncItemCount = syncItems.length;
-		console.log(
-			'Source [' +
+		if (this.progressLogEnabled)
+			console.log(
+				'Source [' +
 				this.syncItemCount +
 				'] directories=' +
 				this.stats.sourceDirectories +
 				' files=' +
 				this.stats.sourceFiles,
-		);
+			);
 		if (!fs.existsSync(this.targetPath)) {
 			fs.mkdirSync(this.targetPath);
 			++this.stats.newDirectories;
@@ -73,7 +74,8 @@ export class FolderSync {
 			await this.syncItem(syncItem);
 			++this.syncItemIndex;
 		}
-		console.log('Sync backwards');
+		if (this.progressLogEnabled)
+			console.log('Sync backwards');
 		this.syncItemIndex = -1;
 		this.syncBackwards(this.targetPath);
 		if (!this.fileTransformer.isReverse) this.afterHasher.save();
