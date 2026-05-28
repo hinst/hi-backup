@@ -2,11 +2,13 @@ import 'source-map-support/register';
 import fs from 'node:fs';
 import process from 'node:process';
 import chalk from 'chalk';
+import { filesize } from 'filesize';
 import { EncryptionTransformer as EncryptionFileTransformer } from 'src/files/transformers/encryptionTransformer';
 import { GzipFileTransformer } from 'src/files/transformers/gzipFileTransformer';
 import { FolderHasher } from 'src/folderHasher';
 import { FolderSync } from 'src/folderSync';
 import { TaskCommand, TaskConfig } from 'src/taskConfig';
+import { getFolderSize } from './folderStats';
 
 async function main() {
 	const configFilePath = process.argv[2];
@@ -19,13 +21,33 @@ async function main() {
 		const taskConfig = Object.assign(TaskConfig.createUndefined(), taskConfigs[i]);
 		console.log('[' + i + '] ' + taskConfig.toColoredString());
 		const completionText = chalk.bold('DONE') + ' ' + taskConfig.toColoredString();
+		const targetSizeBefore = getFolderSize(taskConfig.targetPath);
 		console.time(completionText);
 		await runTask(taskConfig);
 		console.timeEnd(completionText);
+		console.log(formatSizeReport(taskConfig, targetSizeBefore));
 		const isLastTask = i === taskConfigs.length - 1;
-		if (!isLastTask)
-			console.log();
+		if (!isLastTask) console.log();
 	}
+}
+
+function formatSizeReport(taskConfig: TaskConfig, targetSizeBefore: number): string {
+	const targetSize = getFolderSize(taskConfig.targetPath);
+	return (
+		chalk.bold('SIZE') +
+		' ' +
+		chalk.green(taskConfig.sourcePath) +
+		' ' +
+		filesize(getFolderSize(taskConfig.sourcePath)) +
+		' ' +
+		chalk.bold(taskConfig.command) +
+		' ' +
+		chalk.cyan(taskConfig.targetPath) +
+		' ' +
+		filesize(targetSizeBefore) +
+		' ' +
+		(targetSize !== targetSizeBefore ? chalk.cyan('-> ') + filesize(targetSize) : '')
+	);
 }
 
 const folderSyncCommands = [TaskCommand.MIRROR, TaskCommand.COMPRESS, TaskCommand.ENCRYPT];
