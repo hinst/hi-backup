@@ -21,7 +21,9 @@ async function main() {
 		const taskConfig = Object.assign(TaskConfig.createUndefined(), taskConfigs[i]);
 		console.log('[' + i + '] ' + taskConfig.toColoredString());
 		const completionText = chalk.bold('DONE') + ' ' + taskConfig.toColoredString();
-		const targetSizeBefore = getFolderSize(taskConfig.targetPath);
+		const targetSizeBefore = fs.existsSync(taskConfig.targetPath)
+			? getFolderSize(taskConfig.targetPath)
+			: 0;
 		console.time(completionText);
 		await runTask(taskConfig);
 		console.timeEnd(completionText);
