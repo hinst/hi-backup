@@ -9,6 +9,8 @@ import { FolderSyncItem } from 'src/folderSyncItem';
 import { FolderSyncItemReader } from 'src/folderSyncItemReader';
 
 export class FolderSync {
+	/** These top-level files and folders will be skipped,
+		not applied for items inside sub-directories */
 	ignoredList: string[] = [];
 	progressLogEnabled = true;
 	readonly sourcePath: string;

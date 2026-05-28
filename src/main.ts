@@ -22,6 +22,9 @@ async function main() {
 		console.time(completionText);
 		await runTask(taskConfig);
 		console.timeEnd(completionText);
+		const isLastTask = i === taskConfigs.length - 1;
+		if (!isLastTask)
+			console.log();
 	}
 }
 
@@ -33,15 +36,16 @@ async function runTask(taskConfig: TaskConfig) {
 		return;
 	}
 	if (folderSyncCommands.includes(taskConfig.command)) {
-		const mirror = new FolderSync(taskConfig.sourcePath, taskConfig.targetPath);
+		const folderSync = new FolderSync(taskConfig.sourcePath, taskConfig.targetPath);
 		if (taskConfig.command === TaskCommand.COMPRESS)
-			mirror.fileTransformer = new GzipFileTransformer();
+			folderSync.fileTransformer = new GzipFileTransformer();
 		if (taskConfig.command === TaskCommand.ENCRYPT) {
 			if (!taskConfig.password?.length) throw new Error('Need password for encryption');
-			mirror.fileTransformer = new EncryptionFileTransformer(taskConfig.password);
+			folderSync.fileTransformer = new EncryptionFileTransformer(taskConfig.password);
 		}
-		await mirror.run();
-		console.log(mirror.stats);
+		folderSync.ignoredList = taskConfig.ignoredList;
+		await folderSync.run();
+		console.log(folderSync.stats);
 		return;
 	}
 	throw new Error('Unknown command: ' + taskConfig.command);

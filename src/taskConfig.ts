@@ -10,10 +10,11 @@ export enum TaskCommand {
 export class TaskConfig {
 	constructor(
 		readonly command: TaskCommand,
-		readonly sourcePath: string,
-		readonly targetPath: string,
-		readonly password: string,
-	) {}
+		readonly sourcePath: string = '',
+		readonly targetPath: string = '',
+		readonly password: string = '',
+		readonly ignoredList: string[] = []
+	) { }
 
 	static createUndefined() {
 		//@ts-ignore
@@ -29,4 +30,4 @@ export class TaskConfig {
 	}
 }
 
-export class TaskConfigError extends Error {}
+export class TaskConfigError extends Error { }
