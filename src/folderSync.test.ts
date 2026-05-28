@@ -9,9 +9,10 @@ import { GzipFileTransformer } from 'src/files/transformers/gzipFileTransformer'
 import { ReverseFileTransformer } from 'src/files/transformers/reverseFileTransformer';
 import { FolderSyncStats } from 'src/folderStats';
 import { FolderSync } from 'src/folderSync';
+import { compareFiles } from './files/file';
 
 class FolderSyncTest extends FolderSync {
-	progressLogEnabled = false;
+	override progressLogEnabled = false;
 }
 
 function registerFolderSyncTests(suiteName: string, makeTransformer: () => FileTransformer) {
@@ -211,4 +212,18 @@ test(FolderSync.name + '.hashChangeUnpack', async function () {
 
 	if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
 	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
+});
+
+test(FolderSync.name + '.ignoredFolder', async function () {
+	if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
+	{
+		const folderSync = new FolderSyncTest('./test', './test.1');
+		folderSync.ignoredList = ['folder'];
+		await folderSync.run();
+	}
+	assert.equal(fs.readdirSync('./test.1').length, 3);
+	assert(compareFiles('./test/SamplePNGImage_3mb.png', './test.1/SamplePNGImage_3mb.png'));
+	assert(compareFiles('./test/text.txt', './test.1/text.txt'));
+	assert(fs.statSync('./test.1/.hashes.json').isFile());
+	fs.rmSync('./test.1', { recursive: true });
 });
