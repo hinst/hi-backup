@@ -54,8 +54,4 @@ class App {
 	}
 }
 
-async function main() {
-	await new App().run();
-}
-
-const _ = main();
+const _ = new App().run();
