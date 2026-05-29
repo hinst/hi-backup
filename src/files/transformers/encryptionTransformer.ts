@@ -56,13 +56,7 @@ export class EncryptionTransformer extends FileTransformer {
 			this.encryption.encryptFile(sourcePath, targetPath);
 			return true;
 		}
-		let isEqual = false;
-		try {
-			isEqual = this.encryption.compareEncryptedFile(sourcePath, targetPath);
-		} catch (e) {
-			if (e instanceof FileFormatError) isEqual = false;
-			else throw e;
-		}
+		const isEqual = this.encryption.compareEncryptedFile(sourcePath, targetPath);
 		if (isEqual) return false;
 		this.encryption.encryptFile(sourcePath, targetPath);
 		return true;
@@ -73,13 +67,7 @@ export class EncryptionTransformer extends FileTransformer {
 			this.encryption.decryptFile(sourcePath, targetPath);
 			return true;
 		}
-		let isEqual = false;
-		try {
-			isEqual = this.encryption.compareEncryptedFile(targetPath, sourcePath);
-		} catch (e) {
-			if (e instanceof FileFormatError) isEqual = false;
-			else throw e;
-		}
+		const isEqual = this.encryption.compareEncryptedFile(targetPath, sourcePath);
 		if (isEqual) return false;
 		this.encryption.decryptFile(sourcePath, targetPath);
 		return true;
