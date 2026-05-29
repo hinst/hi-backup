@@ -1,6 +1,7 @@
 import 'source-map-support/register';
 import fs from 'node:fs';
 import process from 'node:process';
+import { password as enterPassword } from '@inquirer/prompts';
 import chalk from 'chalk';
 import { EncryptionTransformer as EncryptionFileTransformer } from 'src/files/transformers/encryptionTransformer';
 import { GzipFileTransformer } from 'src/files/transformers/gzipFileTransformer';
@@ -10,13 +11,16 @@ import { FOLDER_SYNC_COMMANDS, TaskCommand, TaskConfig } from 'src/taskConfig';
 import { getFolderSize } from './folderStats';
 
 class App {
+	password: string = '';
+
 	async run() {
 		const configFilePath = process.argv[2];
 		if (!configFilePath?.length)
 			return console.warn('Please provide config file path as command line argument');
 		console.log('Using config: ' + configFilePath);
 		const taskConfigs: TaskConfig[] = JSON.parse(fs.readFileSync(configFilePath).toString());
-		if (!taskConfigs?.length) console.warn('There are no tasks');
+		if (!taskConfigs?.length) return console.warn('There are no tasks');
+		await this.prepareTasks(taskConfigs);
 		for (let i = 0; i < taskConfigs.length; ++i) {
 			const taskConfig = Object.assign(TaskConfig.createUndefined(), taskConfigs[i]);
 			console.log('[' + i + '] ' + taskConfig.toColoredString());
@@ -32,6 +36,16 @@ class App {
 			if (!isLastTask) console.log();
 		}
 	}
+
+	private async prepareTasks(taskConfigs: TaskConfig[]) {
+		const encryptExists = taskConfigs.some((item) => item.command === TaskCommand.ENCRYPT);
+		if (encryptExists)
+			this.password = await enterPassword({
+				message: 'Enter password for encrypted backups:',
+				mask: '*',
+			});
+	}
+
 	private async runTask(taskConfig: TaskConfig) {
 		if (TaskCommand.CHECK_HASH === taskConfig.command) {
 			await new FolderHasher(taskConfig.targetPath).fullCheck();
@@ -41,10 +55,8 @@ class App {
 			const folderSync = new FolderSync(taskConfig.sourcePath, taskConfig.targetPath);
 			if (taskConfig.command === TaskCommand.COMPRESS)
 				folderSync.fileTransformer = new GzipFileTransformer();
-			if (taskConfig.command === TaskCommand.ENCRYPT) {
-				if (!taskConfig.password?.length) throw new Error('Need password for encryption');
-				folderSync.fileTransformer = new EncryptionFileTransformer(taskConfig.password);
-			}
+			if (taskConfig.command === TaskCommand.ENCRYPT)
+				folderSync.fileTransformer = new EncryptionFileTransformer(this.password);
 			folderSync.ignoredList = taskConfig.ignoredList;
 			await folderSync.run();
 			console.log(folderSync.stats);

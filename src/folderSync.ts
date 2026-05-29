@@ -62,11 +62,11 @@ export class FolderSync {
 		if (this.progressLogEnabled)
 			console.log(
 				'Source [' +
-				this.syncItemCount +
-				'] directories=' +
-				this.stats.sourceDirectories +
-				' files=' +
-				this.stats.sourceFiles,
+					this.syncItemCount +
+					'] directories=' +
+					this.stats.sourceDirectories +
+					' files=' +
+					this.stats.sourceFiles,
 			);
 		if (!fs.existsSync(this.targetPath)) {
 			fs.mkdirSync(this.targetPath);
@@ -76,8 +76,6 @@ export class FolderSync {
 			await this.syncItem(syncItem);
 			++this.syncItemIndex;
 		}
-		if (this.progressLogEnabled)
-			console.log('Sync backwards');
 		this.syncItemIndex = -1;
 		this.syncBackwards(this.targetPath);
 		if (!this.fileTransformer.isReverse) this.afterHasher.save();
@@ -169,8 +167,9 @@ export class FolderSync {
 
 	private writeProgress(text: string) {
 		if (!this.progressLogEnabled) return;
-		if (this.syncItemIndex !== -1)
+		if (this.syncItemIndex !== -1) {
 			text = '[' + (this.syncItemIndex + 1) + '/' + this.syncItemCount + '] ' + text;
+		}
 		console.log(text);
 	}
 }

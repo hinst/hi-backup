@@ -10,6 +10,7 @@ export class EncryptionTransformer extends FileTransformer {
 
 	constructor(password: string) {
 		super();
+		if (!password?.length) throw new Error('Password is required');
 		this.encryption = new Encryption(password);
 	}
 

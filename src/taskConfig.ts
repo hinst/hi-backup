@@ -16,7 +16,6 @@ export class TaskConfig {
 		readonly command: TaskCommand,
 		readonly sourcePath: string = '',
 		readonly targetPath: string = '',
-		readonly password: string = '',
 		readonly ignoredList: string[] = [],
 	) {}
 
