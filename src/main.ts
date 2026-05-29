@@ -39,11 +39,21 @@ class App {
 
 	private async prepareTasks(taskConfigs: TaskConfig[]) {
 		const encryptExists = taskConfigs.some((item) => item.command === TaskCommand.ENCRYPT);
-		if (encryptExists)
+		if (encryptExists) {
 			this.password = await enterPassword({
-				message: 'Enter password for encrypted backups:',
+				message: ' Enter password for encrypted backups:',
 				mask: '*',
 			});
+			if (!this.password.length)
+				throw new Error(
+					'Password is required. Empty password is not allowed because it defies the purpose of encryption. You can use COMPRESS or MIRROR mode instead',
+				);
+			const confirmedPassword = await enterPassword({
+				message: 'Repeat password for encrypted backups:',
+				mask: '*',
+			});
+			if (this.password !== confirmedPassword) throw new Error('Passwords must be equal');
+		}
 	}
 
 	private async runTask(taskConfig: TaskConfig) {
