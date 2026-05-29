@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import test from 'node:test';
 import { compareSync } from 'dir-compare';
-import { EncryptionTransformer } from 'src/files/transformers/encryptionTransformer';
+import { EncryptionFileTransformer } from 'src/files/transformers/encryptionFileTransformer';
 import { FileTransformer } from 'src/files/transformers/fileTransformer';
 import { GzipFileTransformer } from 'src/files/transformers/gzipFileTransformer';
 import { ReverseFileTransformer } from 'src/files/transformers/reverseFileTransformer';
@@ -146,18 +146,36 @@ registerFolderSyncTests(FolderSync.name + '.Plain', () => new FileTransformer())
 registerFolderSyncTests(FolderSync.name + '.Gzip', () => new GzipFileTransformer());
 registerFolderSyncTests(
 	FolderSync.name + '.Encryption',
-	() => new EncryptionTransformer('password11'),
+	() => new EncryptionFileTransformer('password11'),
 );
 
 test(FolderSyncTest.name + '.wrongPassword', async function () {
 	if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
+
+	{
+		const folderSync = new FolderSyncTest('./test', './test.1');
+		folderSync.fileTransformer = new EncryptionFileTransformer('password');
+		await folderSync.run();
+	}
+
+	{
+		const folderSync = new FolderSync('./test', './test.1');
+		folderSync.fileTransformer = new EncryptionFileTransformer('different password');
+		await folderSync.run();
+	}
+});
+
+test(FolderSyncTest.name + '.wrongPassword.reverse', async function () {
+	if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
 	const folderSync = new FolderSyncTest('./test', './test.1');
-	folderSync.fileTransformer = new EncryptionTransformer('password');
+	folderSync.fileTransformer = new EncryptionFileTransformer('password');
 	await folderSync.run();
 
 	if (fs.existsSync('./test.0')) fs.rmSync('./test.0', { recursive: true });
 	const folderUnpack = new FolderSyncTest('./test.1', './test.0');
-	folderUnpack.fileTransformer = new ReverseFileTransformer(new EncryptionTransformer('password1'));
+	folderUnpack.fileTransformer = new ReverseFileTransformer(
+		new EncryptionFileTransformer('password1'),
+	);
 	let error: AnyError;
 	try {
 		await folderUnpack.run();

@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 import { Encryption } from 'src/files/encryption';
-import { FileFormatError, FileKind, readSizedBuffer, writeSizedBuffer } from 'src/files/file';
+import { FileKind, readSizedBuffer, writeSizedBuffer } from 'src/files/file';
 import { FileTransformer } from 'src/files/transformers/fileTransformer';
 
-export class EncryptionTransformer extends FileTransformer {
+export class EncryptionFileTransformer extends FileTransformer {
 	private static ENCRYPTED_FILE_NAME_LENGTH = 32;
 	private static INFO_FILE_EXTENSION = '.info';
 	private readonly encryption: Encryption;
@@ -19,7 +19,7 @@ export class EncryptionTransformer extends FileTransformer {
 		const encodedPath = parts.map((part) => this.encryptFileName(part)).join('/');
 		const encodedPaths = [encodedPath];
 		if (kind === FileKind.DIRECTORY) {
-			const infoFilePath = encodedPath + EncryptionTransformer.INFO_FILE_EXTENSION;
+			const infoFilePath = encodedPath + EncryptionFileTransformer.INFO_FILE_EXTENSION;
 			encodedPaths.push(infoFilePath);
 			const encodedFolderName = parts[parts.length - 1];
 			this.saveFolderName(this.targetPath + '/' + infoFilePath, encodedFolderName);
@@ -28,7 +28,7 @@ export class EncryptionTransformer extends FileTransformer {
 	}
 
 	override decodePath(path: string, kind: FileKind): string[] {
-		if (path.endsWith(EncryptionTransformer.INFO_FILE_EXTENSION)) return [];
+		if (path.endsWith(EncryptionFileTransformer.INFO_FILE_EXTENSION)) return [];
 		const parts = path.split('/');
 		const decodedParts: string[] = [];
 		let encryptedPath = '';
@@ -42,7 +42,7 @@ export class EncryptionTransformer extends FileTransformer {
 				continue;
 			}
 			encryptedPath = encryptedPath ? encryptedPath + '/' + encryptedName : encryptedName;
-			const infoRelativePath = encryptedPath + EncryptionTransformer.INFO_FILE_EXTENSION;
+			const infoRelativePath = encryptedPath + EncryptionFileTransformer.INFO_FILE_EXTENSION;
 			const infoPath = this.sourcePath
 				? this.sourcePath + '/' + infoRelativePath
 				: infoRelativePath;
@@ -81,7 +81,7 @@ export class EncryptionTransformer extends FileTransformer {
 		const shortEncryptedName = Encryption.createHash()
 			.update(encryptedFileName)
 			.digest('hex')
-			.slice(0, EncryptionTransformer.ENCRYPTED_FILE_NAME_LENGTH);
+			.slice(0, EncryptionFileTransformer.ENCRYPTED_FILE_NAME_LENGTH);
 		return shortEncryptedName;
 	}
 

@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import process from 'node:process';
 import { password as enterPassword } from '@inquirer/prompts';
 import chalk from 'chalk';
-import { EncryptionTransformer as EncryptionFileTransformer } from 'src/files/transformers/encryptionTransformer';
+import { EncryptionFileTransformer } from 'src/files/transformers/encryptionFileTransformer';
 import { GzipFileTransformer } from 'src/files/transformers/gzipFileTransformer';
 import { FolderHasher } from 'src/folderHasher';
 import { FolderSync } from 'src/folderSync';
