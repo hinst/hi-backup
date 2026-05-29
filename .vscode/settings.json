@@ -2,5 +2,6 @@
 	"editor.formatOnSave": true,
 	"editor.codeActionsOnSave": {
 		"source.organizeImports.biome": "explicit"
-	}
+	},
+	"js/ts.preferences.importModuleSpecifier": "non-relative"
 }
