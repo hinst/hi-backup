@@ -167,9 +167,8 @@ export class FolderSync {
 
 	private writeProgress(text: string) {
 		if (!this.progressLogEnabled) return;
-		if (this.syncItemIndex !== -1) {
+		if (this.syncItemIndex !== -1)
 			text = '[' + (this.syncItemIndex + 1) + '/' + this.syncItemCount + '] ' + text;
-		}
 		console.log(text);
 	}
 }
