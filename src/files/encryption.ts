@@ -155,3 +155,11 @@ export class Encryption {
 		return new TextDecoder().decode(decrypted);
 	}
 }
+
+export enum NodeCryptoErrorReason {
+	BAD_DECRYPT = 'bad decrypt',
+}
+
+export interface NodeCryptoError extends Error {
+	reason: NodeCryptoErrorReason;
+}

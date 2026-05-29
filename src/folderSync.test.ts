@@ -3,13 +3,14 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import test from 'node:test';
 import { compareSync } from 'dir-compare';
+import { NodeCryptoError, NodeCryptoErrorReason } from 'src/files/encryption';
+import { compareFiles } from 'src/files/file';
 import { EncryptionFileTransformer } from 'src/files/transformers/encryptionFileTransformer';
 import { FileTransformer } from 'src/files/transformers/fileTransformer';
 import { GzipFileTransformer } from 'src/files/transformers/gzipFileTransformer';
 import { ReverseFileTransformer } from 'src/files/transformers/reverseFileTransformer';
 import { FolderSyncStats } from 'src/folderStats';
 import { FolderSync } from 'src/folderSync';
-import { compareFiles } from 'src/files/file';
 
 class FolderSyncTest extends FolderSync {
 	override progressLogEnabled = false;
@@ -151,18 +152,27 @@ registerFolderSyncTests(
 
 test(FolderSyncTest.name + '.wrongPassword', async function () {
 	if (fs.existsSync('./test.1')) fs.rmSync('./test.1', { recursive: true });
-
 	{
+		// Initial encryption
 		const folderSync = new FolderSyncTest('./test', './test.1');
 		folderSync.fileTransformer = new EncryptionFileTransformer('password');
 		await folderSync.run();
 	}
 
-	{
+	let error: NodeCryptoError | undefined;
+	try {
+		// Second encryption with a different password
 		const folderSync = new FolderSync('./test', './test.1');
 		folderSync.fileTransformer = new EncryptionFileTransformer('different password');
 		await folderSync.run();
+	} catch (e) {
+		error = e as AnyError;
 	}
+	assert(
+		error != null,
+		'Encrypting files into an already encrypted folder with a different password is not allowed',
+	);
+	assert.equal(error.reason, NodeCryptoErrorReason.BAD_DECRYPT);
 });
 
 test(FolderSyncTest.name + '.wrongPassword.reverse', async function () {

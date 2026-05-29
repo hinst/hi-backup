@@ -21,7 +21,6 @@ export class EncryptionFileTransformer extends FileTransformer {
 		if (!fs.existsSync(encryptedDirectory)) return;
 		const firstEncryptedFile = findFirstFile(encryptedDirectory, [FolderHasher.FILE_NAME]);
 		if (!firstEncryptedFile) return;
-		console.log({ firstEncryptedFile });
 		if (firstEncryptedFile.endsWith(EncryptionFileTransformer.INFO_FILE_EXTENSION))
 			this.loadFolderName(firstEncryptedFile);
 		else this.encryption.decryptFileName(firstEncryptedFile);
