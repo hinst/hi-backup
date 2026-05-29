@@ -9,7 +9,7 @@ import { GzipFileTransformer } from 'src/files/transformers/gzipFileTransformer'
 import { ReverseFileTransformer } from 'src/files/transformers/reverseFileTransformer';
 import { FolderSyncStats } from 'src/folderStats';
 import { FolderSync } from 'src/folderSync';
-import { compareFiles } from './files/file';
+import { compareFiles } from 'src/files/file';
 
 class FolderSyncTest extends FolderSync {
 	override progressLogEnabled = false;

@@ -1,5 +1,5 @@
-import { FileKind } from '../file';
-import { FileTransformer } from './fileTransformer';
+import { FileKind } from 'src/files/file';
+import { FileTransformer } from 'src/files/transformers/fileTransformer';
 
 export class ReverseFileTransformer extends FileTransformer {
 	get sourcePath() {

@@ -8,7 +8,7 @@ import { GzipFileTransformer } from 'src/files/transformers/gzipFileTransformer'
 import { FolderHasher } from 'src/folderHasher';
 import { FolderSync } from 'src/folderSync';
 import { FOLDER_SYNC_COMMANDS, TaskCommand, TaskConfig } from 'src/taskConfig';
-import { getFolderSize } from './folderStats';
+import { getFolderSize } from 'src/folderStats';
 
 class App {
 	password: string = '';

@@ -1,8 +1,9 @@
 import fs from 'node:fs';
 import chalk from 'chalk';
 import cliProgress from 'cli-progress';
-import { joinFilePath, normalizeFilePath, readCountOfFiles, readFileHash } from 'src/files/file';
-import { hasKeys } from './object';
+import { readCountOfFiles } from 'src/files/directory';
+import { joinFilePath, normalizeFilePath, readFileHash } from 'src/files/file';
+import { hasKeys } from 'src/object';
 
 export enum HasherCheckResult {
 	NO_HASH,

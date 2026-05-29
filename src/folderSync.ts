@@ -47,10 +47,11 @@ export class FolderSync {
 		else this.done = true;
 		this.fileTransformer.sourcePath = this.sourcePath;
 		this.fileTransformer.targetPath = this.targetPath;
+		this.fileTransformer.validate();
 		if (fs.existsSync(this.sourcePath)) ++this.stats.sourceDirectories;
 		else throw new Error('Source path does not exist: ' + this.sourcePath);
 		if (!fs.statSync(this.sourcePath).isDirectory())
-			throw new Error('Need directory: ' + this.sourcePath);
+			throw new Error('Need source directory: ' + this.sourcePath);
 		this.sourceHasher.loadOptional();
 		this.beforeHasher.loadOptional();
 

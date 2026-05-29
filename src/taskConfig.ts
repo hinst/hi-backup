@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { filesize } from 'filesize';
-import { getFolderSize } from './folderStats';
+import { getFolderSize } from 'src/folderStats';
 
 export enum TaskCommand {
 	MIRROR = 'mirror',

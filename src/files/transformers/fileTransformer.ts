@@ -20,6 +20,9 @@ export class FileTransformer {
 
 	isReverse: boolean = false;
 
+	validate() {
+	}
+
 	/**
 		@param path Relative path from the source directory
 		@return List of relative paths. The 0th item on the list must be the primary path.

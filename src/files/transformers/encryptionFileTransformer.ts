@@ -1,7 +1,9 @@
 import fs from 'node:fs';
+import { findFirstFile } from 'src/files/directory';
 import { Encryption } from 'src/files/encryption';
 import { FileKind, readSizedBuffer, writeSizedBuffer } from 'src/files/file';
 import { FileTransformer } from 'src/files/transformers/fileTransformer';
+import { FolderHasher } from 'src/folderHasher';
 
 export class EncryptionFileTransformer extends FileTransformer {
 	private static ENCRYPTED_FILE_NAME_LENGTH = 32;
@@ -12,6 +14,17 @@ export class EncryptionFileTransformer extends FileTransformer {
 		super();
 		if (!password?.length) throw new Error('Password is required');
 		this.encryption = new Encryption(password);
+	}
+
+	override validate() {
+		const encryptedDirectory = this.isReverse ? this.sourcePath : this.targetPath;
+		if (!fs.existsSync(encryptedDirectory)) return;
+		const firstEncryptedFile = findFirstFile(encryptedDirectory, [FolderHasher.FILE_NAME]);
+		if (!firstEncryptedFile) return;
+		console.log({ firstEncryptedFile });
+		if (firstEncryptedFile.endsWith(EncryptionFileTransformer.INFO_FILE_EXTENSION))
+			this.loadFolderName(firstEncryptedFile);
+		else this.encryption.decryptFileName(firstEncryptedFile);
 	}
 
 	override encodePath(path: string, kind: FileKind): string[] {
