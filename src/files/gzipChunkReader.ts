@@ -8,9 +8,9 @@ export class GzipChunkReader {
 		const source = fs.createReadStream(this.sourcePath);
 		const gunzip = zlib.createGunzip();
 		const decompressed = source.pipe(gunzip);
-
 		let isClosed = false;
-		/** @returns true if closed */
+
+		/** @returns true if closed now, false if closed earlier */
 		function close(): boolean {
 			if (isClosed) return false;
 			gunzip.destroy();
