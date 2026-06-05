@@ -4,7 +4,7 @@
 	"main": "index.js",
 	"scripts": {
 		"build": "node clean.mjs && tsc && tsc-alias",
-		"start": "node dist/main.js config/backups.json",
+		"start": "node dist/main.js config/backups-silver.json",
 		"unpack": "node --env-file=config/unpack.env dist/main.js",
 		"test": "npm run build && node --test --test-concurrency=1 **/*.test.js"
 	},

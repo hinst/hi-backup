@@ -6,14 +6,17 @@ import chalk from 'chalk';
 import { EncryptionFileTransformer } from 'src/files/transformers/encryptionFileTransformer';
 import { GzipFileTransformer } from 'src/files/transformers/gzipFileTransformer';
 import { FolderHasher } from 'src/folderHasher';
+import { getFolderSize } from 'src/folderStats';
 import { FolderSync } from 'src/folderSync';
 import { FOLDER_SYNC_COMMANDS, TaskCommand, TaskConfig } from 'src/taskConfig';
-import { getFolderSize } from 'src/folderStats';
 
 class App {
 	password: string = '';
 
 	async run() {
+		const totalCompletionText = chalk.bold('TOTAL');
+		console.time(totalCompletionText);
+
 		const configFilePath = process.argv[2];
 		if (!configFilePath?.length)
 			return console.warn('Please provide config file path as command line argument');
@@ -21,6 +24,7 @@ class App {
 		const taskConfigs: TaskConfig[] = JSON.parse(fs.readFileSync(configFilePath).toString());
 		if (!taskConfigs?.length) return console.warn('There are no tasks');
 		await this.prepareTasks(taskConfigs);
+
 		for (let i = 0; i < taskConfigs.length; ++i) {
 			const taskConfig = Object.assign(TaskConfig.createUndefined(), taskConfigs[i]);
 			console.log('[' + i + '] ' + taskConfig.toColoredString());
@@ -35,6 +39,7 @@ class App {
 			const isLastTask = i === taskConfigs.length - 1;
 			if (!isLastTask) console.log();
 		}
+		if (taskConfigs.length > 1) console.timeEnd(totalCompletionText);
 	}
 
 	private async prepareTasks(taskConfigs: TaskConfig[]) {
